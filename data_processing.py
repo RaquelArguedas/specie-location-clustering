@@ -41,12 +41,101 @@ def any_null_column(df):
             return True
     return False
 
-# Returns true or false if there are repeated ids
-def double_id(df):
-    col = df['gbifID'].tolist()
+# Returns true or false if there are repeated cells
+def are_repeated(df, column_name):
+    col = df[column_name].tolist()
     return len(col) != len(set(col))
 
+def get_multi_dict(multi_df):
+    multi_dict = []
+    images_ids = multi_df['gbifID'].tolist()
+    images = multi_df['identifier'].tolist()
 
+    for i in range(len(images_ids)):
+        arr = []
+        for j in range(len(images_ids)):           
+            if (images_ids[i] == images_ids[j]):
+                arr += [images[j]]
+
+        new_item = [images_ids[i], arr]
+        add = True if len(multi_dict) == 0 else (not(new_item == multi_dict[-1]))
+        if (add):
+            multi_dict += [new_item]
+    return multi_dict
+
+# Add multimedia link based on the gbifID
+def add_multi(df, multi_df):
+    col = np.empty(df.shape[0], dtype=object)
+    col[:] = [[] for _ in range(df.shape[0])]
+    
+    ids = df['gbifID'].tolist()
+    multi_dict = get_multi_dict(multi_df)
+
+    for i in range(len(ids)):
+        for item in multi_dict:
+            if (item[0] == ids[i]):
+                col[i] = item
+
+    df['identifier'] = col;
+
+
+def unique_values(list):
+    result = []
+    for target in list:
+        if not target in result: 
+            result += [target]
+    return result
+
+
+def get_correlation_table(df, header):
+    species = unique_values(df['scientificName'].tolist())
+
+    # add rows empty cells
+    table = [header]
+    for specie in species:
+        table += [[specie] + ([0] * (len(header)-1))] 
+
+    # fill the table
+    for country_index in range(1, len(table[0])):
+        for specie_index in range(1, len(table)):
+            temp = df[(df['countryCode']==table[0][country_index]) & (df['scientificName']==table[specie_index][0])]
+            table[specie_index][country_index] = len(temp)
+    
+    return table
+
+def standarize(df):
+    columns = df.columns[1:]
+    df = df[columns]
+    df = StandardScaler().fit_transform(df)
+    df = pd.DataFrame(data=df, columns=columns)
+    return df
+
+def get_best_k(df, columns):
+    bestK = 2
+    maxSil = -2
+    for k in range(2, 11):
+        kmeans = KMeans(n_clusters = k).fit(df[columns])
+        labels = kmeans.labels_
+        result = silhouette_score(df[columns], labels, metric = 'euclidean')
+        if result > maxSil:
+            maxSil = result 
+            bestK = k
+    return bestK
+
+def do_clustering(df):
+    columns = df.columns[1:]
+    df = df[columns]
+    k = get_best_k(df, columns)
+    km = KMeans(n_clusters=k) 
+    y2 = km.fit_predict(df[columns]) 
+    return y2
+
+# visualize
+def visualize(df):
+    plt.figure(figsize=(10, 8))
+    plt.scatter(df.iloc[:, 0], df.iloc[:, 1], c=df['cluster'], cmap='inferno', s=50, alpha=0.7)
+    plt.colorbar(label='Clases')
+    plt.show()
 
 def main():
     df, multi_df = get_datasets()
@@ -59,95 +148,17 @@ def main():
             'scientificName', 'kingdom', 'phylum', 'class', 'order', 'family', 'genus', 'genericName', 
             'specificEpithet', 'taxonRank']]
 
-    print('len(multi_df)',len(multi_df)) 
-    print('len(df)',len(df))
 
-    print('double_id(multi_df)', double_id(multi_df))
-    print('double_id(df)', double_id(df))
+    add_multi(df, multi_df)
+    correlation_columns = unique_values(['scientificName'] + df['countryCode'].tolist())
+    correlation_df = pd.DataFrame(get_correlation_table(df, correlation_columns)[1:])
+    correlation_df.columns = correlation_columns
+    # print(correlation_df) # table with occurences region specie relation
 
+    correlation_df = standarize(correlation_df)
+    print(correlation_df) # standarize table
+
+    correlation_df['cluster'] = do_clustering(correlation_df)
+    # print(correlation_df.head())
+    
 main()
-
-
-
-
-
-
-# Add multimedia link based on the gbifID
-# df['identifier'] = np.full(shape=df.shape[0], fill_value=None)
-# for i in range(0, df.shape[0]):
-#     gbifID_value = df.iloc[i]['gbifID']
-#     target = multi_df.loc[multi_df['gbifID'] == gbifID_value]
-#     if (target.size != 0):
-#         df.loc[df.index[i], 'identifier'] = target['identifier'].values[0]
-
-# Mostrar las primeras filas del DataFrame y las columnas
-# print(df.columns)
-# print(df.head())
-# print('___________________________')
-# print(multi_df.columns)
-# print(multi_df.head())
-# print('___________________________')
-
-
-
-
-# columns = ['individualCount','decimalLatitude','decimalLongitude','depth','taxonKey',
-#             'kingdomKey','phylumKey','familyKey','genusKey']
-
-# occur_df = pd.read_csv('occurrence.txt', delimiter='\t', low_memory=False)
-# occur_df = occur_df[['gbifID',     
-#                     'individualCount',
-#                     # 'organismQuantity', #commented because too many nulls
-#                     'decimalLatitude',
-#                     'decimalLongitude',
-#                     'depth',
-#                     'taxonKey',
-#                     'kingdomKey',    
-#                     'phylumKey',   
-#                     'familyKey',   
-#                     'genusKey']]
-# occur_df = occur_df.dropna() # no null data
-
-# multimedia_df = pd.read_csv('multimedia.txt', delimiter='\t')
-# multimedia_df = multimedia_df[['gbifID', 'identifier']]
-# multimedia_df = multimedia_df.dropna()
-
-# # Add multimedia link based on the ID
-# occur_df['identifier'] = np.full(shape=occur_df.shape[0], fill_value=None)
-# for i in range(0, occur_df.shape[0]):
-#     gbifID_value = occur_df.iloc[i]['gbifID']
-#     target = multimedia_df.loc[multimedia_df['gbifID'] == gbifID_value]
-#     if (target.size != 0):
-#         occur_df.loc[occur_df.index[i], 'identifier'] = target['identifier'].values[0]
-
-# df = occur_df[columns];
-
-# #! standarize
-# df = StandardScaler().fit_transform(df)
-# df = pd.DataFrame(data=df, columns=columns)
-# X2 = df.to_numpy()
-
-# #! predict
-# bestK = 2
-# maxSil = -2
-# for k in range(2, 11):
-#   kmeans = KMeans(n_clusters = k).fit(df[columns])
-#   labels = kmeans.labels_
-#   result = silhouette_score(df[columns], labels, metric = 'euclidean')
-#   if result > maxSil:
-#      maxSil = result 
-#      bestK = k
-
-# km = KMeans(n_clusters=k) 
-# y2 = km.fit_predict(df[columns]) 
-
-# # ! UMAP adjustment
-# umap_model = umap.UMAP(n_components=2, random_state=42)
-# X_umap = umap_model.fit_transform(X2) 
-
-# # Visualize
-# plt.figure(figsize=(10, 8))
-# plt.scatter(X_umap[:, 0], X_umap[:, 1], c=y2, cmap='inferno', s=50, alpha=0.7)
-# plt.colorbar(label='Clases')
-# plt.title('Reducción de dimensionalidad con UMAP')
-# plt.show()
