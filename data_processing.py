@@ -101,6 +101,11 @@ def do_clustering(df):
     print('Row done')
     return y2
 
+def filter_rows_by_sum(correlation_df, threshold):
+    row_sums = correlation_df.iloc[:, 1:].sum(axis=1)
+    filtered_df = correlation_df[row_sums >= threshold]
+    return filtered_df
+
 # visualize
 def visualize(df):
     plt.figure(figsize=(10, 8))
@@ -124,7 +129,7 @@ def main():
     # not null values in those columns
     df = df[df['decimalLatitude'].notnull() & df['decimalLongitude'].notnull() & df['scientificName'].notnull()]
 
-    print('Columns and rows reduced, dataset info:', df.info())
+    print('Columns and rows reduced')
 
     print('Adding multi column...')
     add_multi(df, multi_df)
@@ -136,14 +141,16 @@ def main():
     correlation_columns = unique_values(['scientificName'] + df['hexagon'].tolist())
     correlation_df = get_correlation_table(df)
     correlation_df.columns = correlation_columns
+    correlation_df = filter_rows_by_sum(correlation_df, 100)
+
     # print(correlation_df) # table with occurences region specie relation
     print('Table done, creating csv...')
     correlation_df.to_csv(os.path.join(os.getcwd(), 'correlation_table.csv'))
 
-    correlation_df = standarize(correlation_df)
+    # correlation_df = standarize(correlation_df)
     # print(correlation_df) # standarize table
-    print('Creating second csv...')
-    correlation_df.to_csv(os.path.join(os.getcwd(), 'normalize_correlation_table.csv'))
+    # print('Creating normalize csv...')
+    # correlation_df.to_csv(os.path.join(os.getcwd(), 'normalize_correlation_table.csv'))
 
 
     # Need to debug
