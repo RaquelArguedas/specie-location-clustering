@@ -8,11 +8,11 @@ import h3
 import os
 
 # Goes throw downloaded datasets to make one. Returns that one last dataset.
-def get_datasets():
+def get_datasets(folderName):
     df = pd.DataFrame()
     multi_df = pd.DataFrame()
-    for name in os.listdir('C:/Users/raque/OneDrive - Estudiantes ITCR/Raquel/TEC/2024 II Semestre/CoCoProject/specie-location-clustering/originalDatasets'):
-        temp_df = pd.read_csv(f'originalDatasets/{name}', delimiter='\t', low_memory=False)
+    for name in os.listdir(f'C:/Users/raque/OneDrive - Estudiantes ITCR/Raquel/TEC/2024 II Semestre/CoCoProject/specie-location-clustering/{folderName}'):
+        temp_df = pd.read_csv(f'{folderName}/{name}', delimiter='\t', low_memory=False)
         if name.startswith('occurrence'):
             df = pd.concat([df, temp_df], ignore_index=True)
         else:
@@ -40,43 +40,21 @@ def are_repeated(df, column_name):
     return len(col) != len(set(col))
 
 def get_multi_dict(multi_df):
-    multi_dict = []
-    images_ids = multi_df['gbifID'].tolist()
-    images = multi_df['identifier'].tolist()
+    grouped = multi_df.groupby('gbifID')['identifier'].apply(list).reset_index()
+    multi_dict = grouped.values.tolist()
 
-    for i in range(len(images_ids)):
-        arr = []
-        for j in range(len(images_ids)):           
-            if (images_ids[i] == images_ids[j]):
-                arr += [images[j]]
-
-        new_item = [images_ids[i], arr]
-        add = True if len(multi_dict) == 0 else (not(new_item == multi_dict[-1]))
-        if (add):
-            multi_dict += [new_item]
     return multi_dict
+
 
 # Add multimedia link based on the gbifID
 def add_multi(df, multi_df):
-    col = np.empty(df.shape[0], dtype=object)
-    col[:] = [[] for _ in range(df.shape[0])]
-    
-    ids = df['gbifID'].tolist()
-    multi_dict = get_multi_dict(multi_df)
-
-    for i in range(len(ids)):
-        print (f"{i} out of {len(ids)}", end="\r", flush=True)
-        for item in multi_dict:
-            if (item[0] == ids[i]):
-                col[i] = item
-
-    df['identifier'] = col;
+    multi_dict = multi_df.groupby('gbifID')['identifier'].apply(list).to_dict()
+    df['identifier'] = df['gbifID'].map(multi_dict)
 
 # Add hexagon columns
 def add_hexagons(df):
     col = []
     for index, item in df.iterrows():
-        print (f"{index} out of {len(df)}", end="\r")
         cell = h3.latlng_to_cell(item['decimalLatitude'], item['decimalLongitude'], 1)
         col += [cell]
     df['hexagon'] = col
@@ -88,22 +66,9 @@ def unique_values(list):
             result += [target]
     return result
 
-
-def get_correlation_table(df, header):
-    species = unique_values(df['scientificName'].tolist())
-
-    # add rows empty cells
-    table = [header]
-    for specie in species:
-        table += [[specie] + ([0] * (len(header)-1))] 
-
-    # fill the table
-    for country_index in range(1, len(table[0])):
-        for specie_index in range(1, len(table)):
-            temp = df[(df['hexagon']==table[0][country_index]) & (df['scientificName']==table[specie_index][0])]
-            table[specie_index][country_index] = len(temp)
-    
-    return table
+def get_correlation_table(df):
+    correlation_df = df.pivot_table(index='scientificName', columns='hexagon', aggfunc='size', fill_value=0)
+    return correlation_df.reset_index()
 
 def standarize(df):
     columns = df.columns[1:]
@@ -145,7 +110,7 @@ def visualize(df):
 
 def main():
     print('Starting...')
-    df, multi_df = get_datasets()
+    df, multi_df = get_datasets('biggerDatasets')
     print('Datasets obtained')
 
     # reduce to desired columns
@@ -166,10 +131,10 @@ def main():
     print('Adding hexagons column...')
     add_hexagons(df)
 
-    print('Other columns added')
+    print('Other columns added, creating table...')
 
     correlation_columns = unique_values(['scientificName'] + df['hexagon'].tolist())
-    correlation_df = pd.DataFrame(get_correlation_table(df, correlation_columns)[1:])
+    correlation_df = get_correlation_table(df)
     correlation_df.columns = correlation_columns
     # print(correlation_df) # table with occurences region specie relation
     print('Table done, creating csv...')
