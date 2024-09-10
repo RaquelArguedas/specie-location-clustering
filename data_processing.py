@@ -1,5 +1,5 @@
 import pandas as pd
-from sklearn.cluster import KMeans
+from sklearn.cluster import KMeans, SpectralCoclustering
 from sklearn.metrics import silhouette_score
 import numpy as np
 import matplotlib.pyplot as plt
@@ -101,6 +101,13 @@ def do_clustering(df):
     print('Row done')
     return y2
 
+def do_coclustering(df):
+    model = SpectralCoclustering(n_clusters=5, random_state=0)
+    model.fit(df)
+    df['cluster'] = model.row_labels_
+    return df['cluster']
+
+
 def filter_rows_by_sum(correlation_df, threshold):
     row_sums = correlation_df.iloc[:, 1:].sum(axis=1)
     filtered_df = correlation_df[row_sums >= threshold]
@@ -143,7 +150,11 @@ def main():
     correlation_df.columns = correlation_columns
     correlation_df = filter_rows_by_sum(correlation_df, 100)
 
-    # print(correlation_df) # table with occurences region specie relation
+    print('Doing coclustering...')
+    numeric_df = correlation_df.select_dtypes(include=[np.number])
+    numeric_df = numeric_df.loc[:, (numeric_df.sum(axis=0) != 0)]
+    correlation_df['cluster'] = do_coclustering(numeric_df)
+
     print('Table done, creating csv...')
     correlation_df.to_csv(os.path.join(os.getcwd(), 'correlation_table.csv'))
 
@@ -151,12 +162,6 @@ def main():
     # print(correlation_df) # standarize table
     # print('Creating normalize csv...')
     # correlation_df.to_csv(os.path.join(os.getcwd(), 'normalize_correlation_table.csv'))
-
-
-    # Need to debug
-    # print('Doing cluster...')
-    # correlation_df['cluster'] = do_clustering(correlation_df)
-    # print(correlation_df.head())
 
     print('Done')
     
