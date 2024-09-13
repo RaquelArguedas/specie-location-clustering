@@ -3,9 +3,10 @@ from sklearn.cluster import KMeans, SpectralCoclustering
 from sklearn.metrics import silhouette_score
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
 import h3
 import os
+import umap
 
 # Goes throw downloaded datasets to make one. Returns that one last dataset.
 def get_datasets(folderName):
@@ -47,9 +48,23 @@ def get_multi_dict(multi_df):
 
 
 # Add multimedia link based on the gbifID
-def add_multi(df, multi_df):
+def add_multi(correlation_df, df, multi_df):
     multi_dict = multi_df.groupby('gbifID')['identifier'].apply(list).to_dict()
-    df['identifier'] = df['gbifID'].map(multi_dict)
+    id_species_dict = df.groupby('scientificName')['gbifID'].apply(list).to_dict()
+    correlation_df['identifier'] = [[] for _ in range(len(correlation_df))]
+
+    for scientific_name, gbif_ids in id_species_dict.items():
+        if scientific_name in correlation_df['scientificName'].values:
+            mask = correlation_df['scientificName'] == scientific_name
+            
+            identifiers = []
+            for gbif_id in gbif_ids:
+                if gbif_id in multi_dict:
+                    identifiers.extend(multi_dict[gbif_id])
+            
+            correlation_df.loc[mask, 'identifier'] = correlation_df.loc[mask, 'identifier'].apply(lambda x: x + identifiers)
+    return correlation_df
+     
 
 # Add hexagon columns
 def add_hexagons(df):
@@ -68,7 +83,17 @@ def unique_values(list):
 
 def get_correlation_table(df):
     correlation_df = df.pivot_table(index='scientificName', columns='hexagon', aggfunc='size', fill_value=0)
-    return correlation_df.reset_index()
+    correlation_df = correlation_df.reset_index()
+    correlation_df.columns.name = None
+    return correlation_df
+
+
+def add_extra_info(correlation_df, df, column):
+    def get_values(row):
+        temp = df[df['scientificName'] == row['scientificName']]
+        values = temp[column].value_counts().items()
+        return [val for pair in values for val in pair]
+    correlation_df[column] = correlation_df.apply(get_values, axis=1)
 
 def standarize(df):
     columns = df.columns[1:]
@@ -81,7 +106,6 @@ def get_best_k(df, columns):
     bestK = 2
     maxSil = -2
     for k in range(2, 11):
-        print('k: ', k)
         kmeans = KMeans(n_clusters = k).fit(df[columns])
         labels = kmeans.labels_
         result = silhouette_score(df[columns], labels, metric = 'euclidean')
@@ -90,15 +114,12 @@ def get_best_k(df, columns):
             bestK = k
     return bestK
 
-def do_clustering(df):
-    columns = df.columns[1:]
-    df = df[columns]
-    k = get_best_k(df, columns)
-    print('After k')
+def do_clustering(df, columns):
+    # The scaled is necesary to get a good amount of clustersS
+    df_scaled = pd.DataFrame((StandardScaler().fit_transform(df[columns])), columns=columns)
+    k = get_best_k(df_scaled, columns)
     km = KMeans(n_clusters=k) 
-    print('Clustering done')
-    y2 = km.fit_predict(df[columns]) 
-    print('Row done')
+    y2 = km.fit_predict(df_scaled[columns]) 
     return y2
 
 def do_coclustering(df):
@@ -113,12 +134,29 @@ def filter_rows_by_sum(correlation_df, threshold):
     filtered_df = correlation_df[row_sums >= threshold]
     return filtered_df
 
+import umap
+
+def umap_adjustment(df, columns):
+    umap_model = umap.UMAP(n_components=2)
+    X_umap = umap_model.fit_transform(df[columns])
+    return X_umap[:, 0], X_umap[:, 1]
+
+
 # visualize
-def visualize(df):
+def visualize(df, x_col, y_col, cluster_col):
     plt.figure(figsize=(10, 8))
-    plt.scatter(df.iloc[:, 0], df.iloc[:, 1], c=df['cluster'], cmap='inferno', s=50, alpha=0.7)
-    plt.colorbar(label='Clases')
+    
+    # Crear el scatter plot usando las columnas indicadas
+    plt.scatter(df[x_col], df[y_col], c=df[cluster_col], cmap='inferno', s=50, alpha=0.7)
+    
+    # Etiquetas y colorbar
+    plt.xlabel(x_col)
+    plt.ylabel(y_col)
+    plt.colorbar(label='Clusters')
+    
+    plt.title('Clustering Visualization')
     plt.show()
+
 
 def main():
     print('Starting...')
@@ -132,36 +170,33 @@ def main():
             'decimalLongitude', 'coordinateUncertaintyInMeters', 'identificationID', 'taxonID', 
             'scientificName', 'kingdom', 'phylum', 'class', 'order', 'family', 'genus', 'genericName', 
             'specificEpithet', 'taxonRank']]
-
+    
     # not null values in those columns
     df = df[df['decimalLatitude'].notnull() & df['decimalLongitude'].notnull() & df['scientificName'].notnull()]
-
     print('Columns and rows reduced')
 
-    print('Adding multi column...')
-    add_multi(df, multi_df)
     print('Adding hexagons column...')
     add_hexagons(df)
 
     print('Other columns added, creating table...')
-
-    correlation_columns = unique_values(['scientificName'] + df['hexagon'].tolist())
     correlation_df = get_correlation_table(df)
-    correlation_df.columns = correlation_columns
-    correlation_df = filter_rows_by_sum(correlation_df, 100)
+    correlation_df = filter_rows_by_sum(correlation_df, 100) 
 
-    print('Doing coclustering...')
-    numeric_df = correlation_df.select_dtypes(include=[np.number])
-    numeric_df = numeric_df.loc[:, (numeric_df.sum(axis=0) != 0)]
-    correlation_df['cluster'] = do_coclustering(numeric_df)
+    print('Table done, adding extra info...')
+    for column in ['sex', 'lifeStage', 'continent', 'countryCode', 'kingdom', 'phylum', 'class', 'order', 'family', 'genus']:
+        add_extra_info(correlation_df, df, column)
 
-    print('Table done, creating csv...')
+    print('Adding multi column to table...')
+    add_multi(correlation_df, df, multi_df)
+
+    print('Extra info added, doing clustering...') 
+    selected_columns = correlation_df.select_dtypes(include=[np.number]).columns
+    correlation_df['cluster'] = do_clustering(correlation_df, selected_columns )
+    correlation_df['UMAP1'], correlation_df['UMAP2'] = umap_adjustment(correlation_df, selected_columns)
+    # visualize(correlation_df, 'UMAP1', 'UMAP2', 'cluster')
+
+    print('Creating csv...')
     correlation_df.to_csv(os.path.join(os.getcwd(), 'correlation_table.csv'))
-
-    # correlation_df = standarize(correlation_df)
-    # print(correlation_df) # standarize table
-    # print('Creating normalize csv...')
-    # correlation_df.to_csv(os.path.join(os.getcwd(), 'normalize_correlation_table.csv'))
 
     print('Done')
     
