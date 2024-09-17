@@ -17,60 +17,50 @@ const Graphic = () => {
     .range(['lightcoral', 'lightseagreen', 'darkorchid', 'darkorange', 'lightskyblue', 'deeppink', 'lawngreen', 'aqua', 'papayawhip', 'palegreen', 'orchid']);
 
   const updateChart = useCallback(async (type, paramsAPI) => {
-    const bestKName = 'bestK'+type
-    let data = JSON.parse(localStorage.getItem(type));
     setActualCluster(type)
 
     if (paramsAPI == undefined) paramsAPI = {} 
     if (!svgRef.current) return;
-    if (type.localeCompare('dbscan') !== 0) setBestK(parseInt(localStorage.getItem(bestKName)))
 
-    if (data == null) {
-      setLoading(true);
-      const body = JSON.stringify({ type, paramsAPI });
-      const res = await fetch(`http://127.0.0.1:5000/do_cluster`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: body,
-      });
-      const response = await res.json();
-      data = response['cluster']
-      setBestK(response['bestK'])
-      localStorage.setItem(type, JSON.stringify(data));
-      localStorage.setItem(bestKName, JSON.stringify(response['bestK']));
-      console.log('data received');   
-    }
+    setLoading(true);
+    const body = JSON.stringify({ type, paramsAPI });
+    const res = await fetch(`http://127.0.0.1:5000/do_cluster`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: body,
+    });
+    const response = await res.json();
+    let data = response['cluster']
+    setBestK(response['bestK'])
     setLoading(false);
 
     const svg = d3.select(svgRef.current);
 
     const xScale = d3.scaleLinear()
-      .domain([d3.min(data, d => d.x), d3.max(data, d => d.x)])
+      .domain([d3.min(data, d => d.UMAP1), d3.max(data, d => d.UMAP1)])
       .range([margin.left, width - margin.right]);
 
     const yScale = d3.scaleLinear()
-      .domain([d3.min(data, d => d.y), d3.max(data, d => d.y)])
+      .domain([d3.min(data, d => d.UMAP2), d3.max(data, d => d.UMAP2)])
       .range([height - margin.bottom, margin.top]);
 
     svg.selectAll("circle").remove();
-    svg.selectAll(".x-axis").remove();
-    svg.selectAll(".y-axis").remove();
 
     svg.selectAll("circle")
       .data(data)
       .enter()
       .append("circle")
-      .attr("cx", d => xScale(d.x))
-      .attr("cy", d => yScale(d.y))
+      .attr("cx", d => xScale(d.UMAP1))
+      .attr("cy", d => yScale(d.UMAP2))
       .attr("r", 4)
       .attr("fill", d => colorScale(d.cluster))
       .on("mouseover", (event, d) => {
         d3.select(".tooltip").transition()
           .duration(200)
           .style("opacity", 0.9);
-        d3.select(".tooltip").html(`x: ${d.x}<br/>y: ${d.y}`)
+        d3.select(".tooltip").html(`UMAP1: ${d.UMAP1.toFixed(2)}<br/>UMAP2: ${d.UMAP2.toFixed(2)}`)
           .style("left", `${event.pageX + 5}px`)
           .style("top", `${event.pageY - 28}px`);
       })
@@ -79,16 +69,6 @@ const Graphic = () => {
           .duration(500)
           .style("opacity", 0);
       });
-
-    svg.append("g")
-      .attr("class", "x-axis")
-      .attr("transform", `translate(0,${height - margin.bottom})`)
-      .call(d3.axisBottom(xScale));
-
-    svg.append("g")
-      .attr("class", "y-axis")
-      .attr("transform", `translate(${margin.left},0)`)
-      .call(d3.axisLeft(yScale));
 
     const zoom = d3.zoom()
       .scaleExtent([0.5, 20])
@@ -101,20 +81,15 @@ const Graphic = () => {
       const newYScale = transform.rescaleY(yScale);
     
       svg.selectAll("circle")
-        .attr("cx", d => newXScale(d.x))
-        .attr("cy", d => newYScale(d.y));
-    
-      svg.select(".x-axis").call(d3.axisBottom(newXScale));
-      svg.select(".y-axis").call(d3.axisLeft(newYScale));
+        .attr("cx", d => newXScale(d.UMAP1))
+        .attr("cy", d => newYScale(d.UMAP2));
     }
 
     svg.call(zoom);
   }, []);
 
   const sendParams = (params) => {
-    console.log('params', params, typeof(params))
     if (localStorage.getItem(actualCluster) != null) {
-      console.log('eliminando local storage')
       localStorage.removeItem(actualCluster)
     }
     updateChart(actualCluster, params)

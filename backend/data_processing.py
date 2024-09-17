@@ -7,6 +7,7 @@ from sklearn.preprocessing import MinMaxScaler, StandardScaler
 import h3
 import os
 import umap
+import math
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -226,6 +227,30 @@ def visualize(df, x_col, y_col, cluster_col):
     plt.title('Clustering Visualization')
     plt.show()
 
+def check_for_nan(data):
+    if isinstance(data, float) and math.isnan(data):
+        return True
+    
+    elif isinstance(data, list):
+        # Verifica si hay NaN en listas
+        return any(check_for_nan(item) for item in data)
+    
+    elif isinstance(data, dict):
+        # Verifica si hay NaN en diccionarios
+        return any(check_for_nan(value) for value in data.values())
+    
+    return False
+
+def check_for_nan_df(df):
+    for index, item in df.iterrows():
+        row_list = item.tolist()
+        for col in row_list:
+            if isinstance(col, (float, int)) and math.isnan(col):
+                print('1, NAN','index: ', index)
+            if (type(col) == list):
+                for val in col:
+                    if isinstance(val, (float, int)) and math.isnan(val):
+                        print('2, NAN','index: ', index, ', val: ', val)
 
 def main():
     print('Starting...')
@@ -269,7 +294,6 @@ def main():
 
     print('Done')
 
-
 @app.route('/do_cluster', methods=['POST'])
 def do_cluster():
     print('called the backend')
@@ -285,6 +309,7 @@ def do_cluster():
 
     # reduce to desired columns
     multi_df = multi_df[['gbifID', 'identifier']]
+    multi_df = multi_df.dropna(how='any',axis=0)
     df = df[['gbifID', 'sex', 'lifeStage', 'occurrenceStatus', 'occurrenceRemarks', 'eventDate', 
             'year', 'month', 'day', 'continent', 'countryCode', 'stateProvince', 'decimalLatitude', 
             'decimalLongitude', 'coordinateUncertaintyInMeters', 'identificationID', 'taxonID', 
@@ -313,16 +338,28 @@ def do_cluster():
     selected_columns = correlation_df.select_dtypes(include=[np.number]).columns
     correlation_df['cluster'], bestK = clustering(type, correlation_df, selected_columns, params) 
     correlation_df['UMAP1'], correlation_df['UMAP2'] = umap_adjustment(correlation_df, selected_columns)
-    visualize(correlation_df, 'UMAP1', 'UMAP2', 'cluster')
+    #visualize(correlation_df, 'UMAP1', 'UMAP2', 'cluster')
     
     print('Creating csv...')
     correlation_df.to_csv(os.path.join(os.getcwd(), 'correlation_table.csv'))
+
+    print('LOOKING FOR NAN')
+    check_for_nan_df(correlation_df)
 
     print('Done')
 
     json_data = {}
     json_data['cluster'] = correlation_df.to_dict(orient='records')
     json_data['bestK'] = bestK
+    # print('_______________________________________')
+    # if json_data['cluster']:
+    #     print('Verificando si hay NaN en json_data["cluster"]...')
+    #     if check_for_nan(json_data['cluster']):
+    #         print("Se encontraron valores NaN en json_data['cluster'].")
+    #     else:
+    #         print("No se encontraron valores NaN en json_data['cluster'].")
+
+    print('Best K value:', json_data['bestK'])
     return jsonify(json_data)
 
 

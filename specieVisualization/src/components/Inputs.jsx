@@ -6,6 +6,7 @@ import Select from '@mui/material/Select';
 const Inputs = ({ cluster, sendParams, bestK }) => {
   const [selectedJson, setSelectedJson] = useState({})
   const [params, setParams] = useState({})
+  const [error, setError] = useState(null);
 
   const kmeansJson = {
     "n_clusters": {
@@ -163,97 +164,131 @@ const Inputs = ({ cluster, sendParams, bestK }) => {
     }
   }
   
-  const handleChange = (event, key) => {
+  const handleChange = useCallback((event, key) => {
     const newValue = event.target.value;
     setParams(prevParams => ({
       ...prevParams,
       [key]: newValue
     }));
-  };
+  }, []);
 
-  const handleSendParams = () => {
-    const paramsName = 'params'+cluster
+  const handleSendParams = useCallback(() => {
+    const paramsName = 'params' + cluster;
     localStorage.setItem(paramsName, JSON.stringify(params));
-    sendParams(params);  
-  };
+    sendParams(params);
+  }, [cluster, params, sendParams]);
 
   useEffect(() => {
-    const paramsName = 'params'+cluster
-    const json = cluster == "kmeans" ? kmeansJson : (cluster == "dbscan" ? dbscanJson : hierarchicalJson)
-    setSelectedJson(json)
+    const paramsName = 'params' + cluster;
+    let json;
+    switch(cluster) {
+      case "kmeans":
+        json = kmeansJson;
+        break;
+      case "dbscan":
+        json = dbscanJson;
+        break;
+      case "hierarquical":
+        json = hierarchicalJson;
+        break;
+      default:
+        console.error(`Unknown cluster type: ${cluster}`);
+        setError(`Unknown cluster type: ${cluster}`);
+        return;
+    }
+    
+    console.log('Selected JSON:', json);
+    setSelectedJson(json);
 
     let savedParams = JSON.parse(localStorage.getItem(paramsName));
     const newParams = Object.keys(json).reduce((acc, key) => {
       acc[key] = json[key]['default'];
       return acc;
-    }, {});  
-    setParams(savedParams === null ? newParams : savedParams)
+    }, {});
+    setParams(savedParams === null ? newParams : savedParams);
   }, [cluster]);
 
   useEffect(() => {
-    setSelectedJson(prevJson => ({
-      ...prevJson,
-      n_clusters: {
-        ...prevJson.n_clusters,
-        default: bestK,
-      },
-    }));
+    setSelectedJson(prevJson => {
+      console.log('Updating selectedJson with new bestK:', bestK);
+      return {
+        ...prevJson,
+        n_clusters: prevJson.n_clusters ? {
+          ...prevJson.n_clusters,
+          default: bestK,
+        } : undefined,
+      };
+    });
 
     setParams(prevParams => ({
       ...prevParams,
-      n_clusters: bestK, 
+      n_clusters: bestK,
     }));
   }, [bestK]);
 
-  
+  if (Object.keys(selectedJson).length === 0) {
+    return <div>Loading parameters...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
+
   return (
     <div className="inputs-group">
-      <h3>Hiperparameters</h3>
-      {Object.keys(selectedJson).map((key) => (
-        <div className='inputs-subgroup'>
-          <p>{key}</p>
-          {(selectedJson[key]['type'] == 'int' || selectedJson[key]['type'] == 'float') ? (
-            <Slider 
-              value={params[key]}
-              valueLabelDisplay="auto"
-              sx={{color: '#595959',  
-                width: '60%', 
-                margin: '5px',
-                marginRight: '15px',
-                display: 'flex',
-                justifyContent: 'center',
-                alignSelf: 'center'}}
-              onChange={(event) => handleChange(event, key)}
-              marks
-              step={selectedJson[key]['step']}
-              min={selectedJson[key]['min']}
-              max={selectedJson[key]['max']}
-              key={key}
-            />
-          ) : (
-            <Select
-              value={params[key]}
-              onChange={(event) => handleChange(event, key)}  
-              displayEmpty
-              inputProps={{ 'aria-label': 'Without label' }}
-              sx={{
-                width: '60%', 
-                height:'35px',
-                margin: '5px',
-                marginRight: '15px',
-                display: 'flex',
-                justifyContent: 'center',
-                alignSelf: 'center',
-                fontFamily:'Poppins'
-              }}
-            >
-              {selectedJson[key]['options'].map((op) =>
-                <MenuItem key={op} value={op}>{op.toString()}</MenuItem> 
-              )}
-            </Select>
-          )}
-        </div>
-      ))}
+      <h3>Hyperparameters</h3>
+      {Object.entries(selectedJson).map(([key, value]) => {
+        if (!value) {
+          console.error(`Invalid parameter: ${key}`);
+          return null;
+        }
+        return (
+          <div key={key} className='inputs-subgroup'>
+            <p>{key}</p>
+            {(value.type === 'int' || value.type === 'float') ? (
+              <Slider 
+                value={params[key] ?? value.default}
+                valueLabelDisplay="auto"
+                sx={{
+                  color: '#595959',  
+                  width: '60%', 
+                  margin: '5px',
+                  marginRight: '15px',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignSelf: 'center'
+                }}
+                onChange={(event) => handleChange(event, key)}
+                marks
+                step={value.step}
+                min={value.min}
+                max={value.max}
+              />
+            ) : (
+              <Select
+                value={params[key] ?? value.default}
+                onChange={(event) => handleChange(event, key)}  
+                displayEmpty
+                inputProps={{ 'aria-label': 'Without label' }}
+                sx={{
+                  width: '60%', 
+                  height:'35px',
+                  margin: '5px',
+                  marginRight: '15px',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignSelf: 'center',
+                  fontFamily:'Poppins'
+                }}
+              >
+                {value.options.map((op) =>
+                  <MenuItem key={op} value={op}>{op.toString()}</MenuItem> 
+                )}
+              </Select>
+            )}
+          </div>
+        );
+      })}
       <button className='inputs-button' onClick={handleSendParams}>Apply</button>
     </div>
   );
