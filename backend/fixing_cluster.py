@@ -9,13 +9,6 @@ import os
 import umap
 import math
 
-from flask import Flask, request, jsonify
-from flask_cors import CORS
-import json
-
-app = Flask(__name__)
-CORS(app)
-
 # Goes throw downloaded datasets to make one. Returns that one last dataset.
 def get_datasets(folderName):
     df = pd.DataFrame()
@@ -259,65 +252,13 @@ def check_for_nan_df(df):
                     if isinstance(val, (float, int)) and math.isnan(val):
                         print('2, NAN','index: ', index, ', val: ', val)
 
-# def main():
-#     print('Starting...')
-#     df, multi_df = get_datasets('biggerDatasets')
-#     print('Datasets obtained')
-
-#     # reduce to desired columns
-#     multi_df = multi_df[['gbifID', 'identifier']]
-#     df = df[['gbifID', 'sex', 'lifeStage', 'occurrenceStatus', 'occurrenceRemarks', 'eventDate', 
-#             'year', 'month', 'day', 'continent', 'countryCode', 'stateProvince', 'decimalLatitude', 
-#             'decimalLongitude', 'coordinateUncertaintyInMeters', 'identificationID', 'taxonID', 
-#             'scientificName', 'kingdom', 'phylum', 'class', 'order', 'family', 'genus', 'genericName', 
-#             'specificEpithet', 'taxonRank']]
-    
-#     # not null values in those columns
-#     df = df[df['decimalLatitude'].notnull() & df['decimalLongitude'].notnull() & df['scientificName'].notnull()]
-#     print('Columns and rows reduced')
-
-#     print('Adding hexagons column...')
-#     add_hexagons(df)
-
-#     print('Other columns added, creating table...')
-#     correlation_df = get_correlation_table(df)
-#     correlation_df = filter_rows_by_sum(correlation_df, 100) 
-
-#     print('Table done, adding extra info...')
-#     for column in ['sex', 'lifeStage', 'continent', 'countryCode', 'kingdom', 'phylum', 'class', 'order', 'family', 'genus']:
-#         add_extra_info(correlation_df, df, column)
-
-#     print('Adding multi column to table...')
-#     add_multi(correlation_df, df, multi_df)
-
-#     print('Extra info added, doing clustering...') 
-#     selected_columns = correlation_df.select_dtypes(include=[np.number]).columns
-    
-#     correlation_df['cluster'] = do_clustering(correlation_df, selected_columns )
-#     correlation_df['UMAP1'], correlation_df['UMAP2'] = umap_adjustment(correlation_df, selected_columns)
-#     visualize(correlation_df, 'UMAP1', 'UMAP2', 'cluster')
-
-#     print('Creating csv...')
-#     correlation_df.to_csv(os.path.join(os.getcwd(), 'correlation_table.csv'))
-
-#     print('Done')
-
-@app.route('/do_cluster', methods=['POST'])
-def do_cluster():
-    print('called the backend')
-    print('request.json', request.json)
-    type = request.json.get('type')
-    params = request.json.get('paramsAPI', {})
-
-    print(type, params)
-
+def main():
     print('Starting...')
     df, multi_df = get_datasets('biggerDatasets')
     print('Datasets obtained')
 
     # reduce to desired columns
     multi_df = multi_df[['gbifID', 'identifier']]
-    multi_df = multi_df.dropna(how='any',axis=0)
     df = df[['gbifID', 'sex', 'lifeStage', 'occurrenceStatus', 'occurrenceRemarks', 'eventDate', 
             'year', 'month', 'day', 'continent', 'countryCode', 'stateProvince', 'decimalLatitude', 
             'decimalLongitude', 'coordinateUncertaintyInMeters', 'identificationID', 'taxonID', 
@@ -334,7 +275,6 @@ def do_cluster():
     print('Other columns added, creating table...')
     correlation_df = get_correlation_table(df)
     correlation_df = filter_rows_by_sum(correlation_df, 100) 
-    correlation_df = filter_columns_by_sum(correlation_df, 100) 
 
     # print('Table done, adding extra info...')
     # for column in ['sex', 'lifeStage', 'continent', 'countryCode', 'kingdom', 'phylum', 'class', 'order', 'family', 'genus']:
@@ -345,26 +285,14 @@ def do_cluster():
 
     print('Extra info added, doing clustering...') 
     selected_columns = correlation_df.select_dtypes(include=[np.number]).columns
-    # print(correlation_df[selected_columns])
-    correlation_df['cluster'], bestK = clustering(type, correlation_df, selected_columns, params) 
-    correlation_df['UMAP1'], correlation_df['UMAP2'] = umap_adjustment(correlation_df, selected_columns)
-    # visualize(correlation_df, 'UMAP1', 'UMAP2', 'cluster')
     
+    correlation_df['cluster'] = do_clustering(correlation_df, selected_columns )
+    correlation_df['UMAP1'], correlation_df['UMAP2'] = umap_adjustment(correlation_df, selected_columns)
+    visualize(correlation_df, 'UMAP1', 'UMAP2', 'cluster')
+
     print('Creating csv...')
     correlation_df.to_csv(os.path.join(os.getcwd(), 'correlation_table.csv'))
 
-    print('LOOKING FOR NAN')
-    check_for_nan_df(correlation_df)
-
     print('Done')
 
-    json_data = {}
-    json_data['cluster'] = correlation_df.to_dict(orient='records')
-    json_data['bestK'] = bestK
-
-    print('Best K value:', json_data['bestK'])
-    return jsonify(json_data)
-
-
-if __name__ == '__main__':
-    app.run(debug=True)
+main()
