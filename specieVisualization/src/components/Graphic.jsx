@@ -1,22 +1,24 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, act } from 'react';
 import PuffLoader from "react-spinners/PuffLoader";
-import Inputs from "./Inputs"
+import Sidebar from "./Sidebar"
 import * as d3 from 'd3';
 
 const Graphic = () => {
   const [loading, setLoading] = useState(false);
   const [actualCluster, setActualCluster] = useState("kmeans");
-  const [bestK, setBestK] = useState(2);
+  const [bestK, setBestK] = useState(1);
   const svgRef = useRef(null);
   const width = 1000;
   const height = 1000;
   const margin = { top: 20, right: 30, bottom: 30, left: 60 };
+  const [jsonInfo, setJsonInfo] = useState(null);
   
   const colorScale = d3.scaleOrdinal()
     .domain([-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
     .range(['lightcoral', 'lightseagreen', 'darkorchid', 'darkorange', 'lightskyblue', 'deeppink', 'lawngreen', 'aqua', 'papayawhip', 'palegreen', 'orchid']);
 
   const updateChart = useCallback(async (type, paramsAPI) => {
+    setBestK(1)
     setActualCluster(type)
 
     if (paramsAPI == undefined) paramsAPI = {} 
@@ -68,6 +70,9 @@ const Graphic = () => {
         d3.select(".tooltip").transition()
           .duration(500)
           .style("opacity", 0);
+      })
+      .on("click", (event, d) => {
+        setJsonInfo(d);
       });
 
     const zoom = d3.zoom()
@@ -89,9 +94,6 @@ const Graphic = () => {
   }, []);
 
   const sendParams = (params) => {
-    if (localStorage.getItem(actualCluster) != null) {
-      localStorage.removeItem(actualCluster)
-    }
     updateChart(actualCluster, params)
   }
 
@@ -115,6 +117,12 @@ const Graphic = () => {
     };
   }, [updateChart]);
 
+  const images = [
+    "https://picsum.photos/id/1018/1000/600/",
+    "https://picsum.photos/id/1015/250/150/",
+    "https://picsum.photos/id/1019/1000/600/"
+  ];
+
   return (
     <div className="main-group">
       <div className="svg-group">
@@ -132,7 +140,7 @@ const Graphic = () => {
         <svg ref={svgRef}></svg>
         <div className="tooltip" style={{ opacity: 0, position: 'absolute' }}></div>
       </div>
-      <Inputs cluster={actualCluster} sendParams={sendParams} bestK={bestK}/>
+      <Sidebar cluster={actualCluster} sendParams={sendParams} bestK={bestK} jsonInfo={jsonInfo}/>
     </div>
   );
 };

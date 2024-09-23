@@ -1,3 +1,4 @@
+
 .app-container {
   display: flex;
   flex-direction: column;
@@ -64,11 +65,15 @@
   border-radius: 0px 0px 100px 100px;
 }
 
-.inputs-group{
+.sidebar{
   width: 30%;
   background-color: rgb(237, 237, 237);
   border: 2px;
   border-radius: 10px;
+}
+
+.inputs-group{
+  margin-bottom: 30px;
   justify-content: start;
   display: flex;
   flex-direction: column;
@@ -106,6 +111,82 @@
   width: 50%;
   margin-top: 40px;
 }
+
+.info-container{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 45%;
+}
+
+.info-group{
+  padding: 5px;
+  width: 90%;
+  height: 100%;
+  background-color: #fff;
+  border: 2px;
+  border-radius: 10px;
+}
+
+.gallery-container{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.gallery-buttons{
+  display: flex;
+  flex-direction: row;
+}
+
+.info-paragraph {
+  margin-top: 1rem; 
+}
+
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr); /* X in repeat(X, 1fr); means amount of columns */
+  gap: 1rem; 
+}
+
+.grid-container p{
+  margin: 0px;
+  margin-bottom: 10px;
+}
+
+.grid-container button{
+  padding: 2px;
+  margin: 0px !important; 
+  color: rgb(123, 123, 123);
+  background-color: white;
+  font-size: 17px;
+}
+
+.grid-container button:hover {
+  color: black;
+  background-color: white;
+}
+
+.gallery-container img {
+  width: 300px;
+  height: 200px;
+  margin: 5px;
+  object-fit: cover;
+  object-position: center;
+}
+
+.gallery-container button {
+  display: flex;             
+  justify-content: center;  
+  align-items: center;       
+  width: 40px;              
+  height: 40px;              
+  background-color: #f0f0f0; 
+  border: none;            
+  border-radius: 50%;   
+  cursor: pointer;       
+}
+
 
 h1 {
   margin-top: 30px;

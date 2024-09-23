@@ -47,7 +47,7 @@ def add_multi(correlation_df, df, multi_df):
 def add_hexagons(df):
     col = []
     for index, item in df.iterrows():
-        cell = h3.latlng_to_cell(item['decimalLatitude'], item['decimalLongitude'], 0)
+        cell = h3.latlng_to_cell(item['decimalLatitude'], item['decimalLongitude'], 1)
         col += [cell]
     df['hexagon'] = col
 
@@ -82,7 +82,7 @@ def filter_columns_by_sum(correlation_df, threshold):
 # Scale the df and do the UMAP
 def umap_adjustment(df, columns):
     data_scaled = StandardScaler().fit_transform(df[columns])
-    X_umap = (umap.UMAP(n_neighbors=15, min_dist=0.2, random_state=42)).fit_transform(data_scaled)
+    X_umap = (umap.UMAP(n_neighbors=15, min_dist=0.2)).fit_transform(data_scaled)
     return X_umap
 
 # Obtains the best k of a df
