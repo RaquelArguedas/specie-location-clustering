@@ -17,6 +17,16 @@ const Graphic = () => {
     .domain([-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
     .range(['lightcoral', 'lightseagreen', 'darkorchid', 'darkorange', 'lightskyblue', 'deeppink', 'lawngreen', 'aqua', 'papayawhip', 'palegreen', 'orchid']);
 
+  const getSize = (family) => {
+    const occurrences = family[1];
+  
+    const sizeScale = d3.scaleLog()
+      .domain([100, 15000])
+      .range([5, 20]); 
+  
+    return sizeScale(occurrences);
+  };
+  
   const updateChart = useCallback(async (type, paramsAPI) => {
     setBestK(1)
     setActualCluster(type)
@@ -56,24 +66,12 @@ const Graphic = () => {
       .append("circle")
       .attr("cx", d => xScale(d.UMAP1))
       .attr("cy", d => yScale(d.UMAP2))
-      .attr("r", 4)
+      .attr("r", d => getSize(d.family))
       .attr("fill", d => colorScale(d.cluster))
-      .on("mouseover", (event, d) => {
-        d3.select(".tooltip").transition()
-          .duration(200)
-          .style("opacity", 0.9);
-        d3.select(".tooltip").html(`UMAP1: ${d.UMAP1.toFixed(2)}<br/>UMAP2: ${d.UMAP2.toFixed(2)}`)
-          .style("left", `${event.pageX + 5}px`)
-          .style("top", `${event.pageY - 28}px`);
-      })
-      .on("mouseout", () => {
-        d3.select(".tooltip").transition()
-          .duration(500)
-          .style("opacity", 0);
-      })
       .on("click", (event, d) => {
         setJsonInfo(d);
       });
+      
 
     const zoom = d3.zoom()
       .scaleExtent([0.5, 20])
@@ -138,7 +136,6 @@ const Graphic = () => {
         </div>
         }
         <svg ref={svgRef}></svg>
-        <div className="tooltip" style={{ opacity: 0, position: 'absolute' }}></div>
       </div>
       <Sidebar cluster={actualCluster} sendParams={sendParams} bestK={bestK} jsonInfo={jsonInfo}/>
     </div>

@@ -126,6 +126,37 @@
   background-color: #fff;
   border: 2px;
   border-radius: 10px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 10px;
+}
+
+.info-paragraph {
+  margin-top: 1rem; 
+}
+
+.info-header {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.occurrences {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: rgb(70, 132, 219);
+}
+
+.occurrences-total {
+  font-size: 24px;
+  margin: 0px;
+}
+
+.occurrences-label {
+  font-size: 14px;
+  margin: 0px;
 }
 
 .gallery-container{
@@ -139,9 +170,7 @@
   flex-direction: row;
 }
 
-.info-paragraph {
-  margin-top: 1rem; 
-}
+
 
 .grid-container {
   display: grid;
