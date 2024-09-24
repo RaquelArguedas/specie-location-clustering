@@ -77,17 +77,17 @@ const Graphic = () => {
       .scaleExtent([0.5, 20])
       .on('zoom', zoomed);
 
-      function zoomed(event) {
-        const transform = event.transform;
-        
-        const newXScale = transform.rescaleX(xScale);
-        const newYScale = transform.rescaleY(yScale);
-        
-        svg.selectAll("circle")
-          .attr("cx", d => newXScale(d.UMAP1))
-          .attr("cy", d => newYScale(d.UMAP2))
-          .attr("r", d => getSize(d.family) * transform.k); // Ajustar el tamaño de los círculos con el zoom
-      }
+    function zoomed(event) {
+      const transform = event.transform;
+      
+      const newXScale = transform.rescaleX(xScale);
+      const newYScale = transform.rescaleY(yScale);
+      
+      svg.selectAll("circle")
+        .attr("cx", d => newXScale(d.UMAP1))
+        .attr("cy", d => newYScale(d.UMAP2))
+        .attr("r", d => getSize(d.family) * transform.k); 
+    }
       
 
     svg.call(zoom);

@@ -97,7 +97,7 @@ const Info = ({ jsonInfo }) => {
 
   return (
     <div className="info-container">
-      {!loading ? (
+      {!loading & formattedInfo.length!=0 ? (
         <div className="info-group">
           <div className="info-header">
             <h3 className="scientific-name">{scientificName}</h3>
