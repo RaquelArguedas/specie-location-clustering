@@ -3,7 +3,7 @@
   display: flex;
   flex-direction: column;
   min-width: 1400px;
-  width: 100%;
+  width: calc(100vw - 50px);
   height: 100vh;
   justify-content: top;
   align-items: center;
@@ -27,19 +27,24 @@
 .button-group {
   text-align: center;
   margin-top: 10px;
-  margin-bottom: 60px;
+  margin-bottom: 10px;
 }
 
 .main-group{
   display: flex;
-  width: 100%;
+  width: 100vw;
 }
 
 .svg-group{
-  width: 70%;
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+
+.svg-group svg{
+  width: 100%;
+  height: 100%;
 }
 
 .loading-group{
@@ -65,18 +70,83 @@
   border-radius: 0px 0px 100px 100px;
 }
 
-.sidebar{
-  width: 30%;
+.sidebar {
+  width: 500px;
+  height: 100vh;
+  background-color: #f4f4f4;
+  position: fixed;
+  top: 0;
+  right: 0;
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+}
+
+.sidebar-visible {
+  transform: translateX(0);  
+}
+
+.sidebar-hidden {
+  transform: translateX(100%);  
+}
+
+.sidebar-container{
+  display: flex; 
+  justify-content: end;
+  width: 1%;
+  z-index: 1000; 
+}
+
+.sidebar-btn {
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
   background-color: rgb(237, 237, 237);
-  border: 2px;
-  border-radius: 10px;
+  font-size: 30px;
+  border: none;
+  height: 50px;
+  margin-top: 10px;
+  border-radius: 5px 0px 0px 5px;
+  transition: transform 0.3s ease;
+  z-index: 1001;
+}
+
+.sidebar-btn:hover {
+  background-color: rgb(200, 200, 200); 
+  color: black;
+}
+
+.sidebar-btn-visible {
+  transform: translateX(-500px);  
+}
+
+.sidebar-btn-hidden {
+  transform: translateX(0);  
 }
 
 .inputs-group{
-  margin-bottom: 30px;
+  margin-bottom: 15px;
   justify-content: start;
   display: flex;
   flex-direction: column;
+}
+
+.inputs-group h2{
+  display: flex;
+  align-items: center; 
+  justify-content: center;
+}
+
+.info-group{
+  padding: 5px;
+  width: 90%;
+  height: 100%;
+  max-height: 600px;
+  background-color: #fff;
+  border: 2px;
+  border-radius: 10px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 10px;
 }
 
 .inputs-subgroup{
@@ -106,17 +176,34 @@
 }
 
 .inputs-button {
-  background-color: rgb(237, 237, 237);
+  background-color: white;
   align-self: center;
   width: 50%;
   margin-top: 40px;
+}
+
+.visibility-btn {
+  background-color: #f4f4f4;
+  font-size: 30px;
+  border: none;
+  padding: 0px;
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+}
+
+.visibility-btn:hover {
+  background-color: rgb(200, 200, 200); 
+  color: black;
+  border: 1px;
+  border-radius: 20px;
 }
 
 .info-container{
   display: flex;
   flex-direction: column;
   align-items: center;
-  height: 45%;
+  margin-top: 10px;
 }
 
 .info-group{
@@ -140,6 +227,22 @@
   justify-content: space-around;
   align-items: center;
   margin-bottom: 10px;
+}
+
+.spinner {
+  animation-name: spin;
+  animation-duration: 1000ms;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear; 
+}
+
+@keyframes spin {
+    from {
+        transform:rotate(0deg);
+    }
+    to {
+        transform:rotate(360deg);
+    }
 }
 
 .occurrences {
@@ -223,6 +326,13 @@ h1 {
   font-weight: 400;
   font-style: normal;
   font-size: 40px;
+}
+
+h2 {
+  font-family: "DM Serif Text", serif;
+  font-size: 25px;
+  font-weight: 500;
+  text-align: center;
 }
 
 h3 {

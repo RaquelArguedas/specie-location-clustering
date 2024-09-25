@@ -9,6 +9,7 @@ import os
 import umap
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+import json
 
 app = Flask(__name__)
 CORS(app)
@@ -186,14 +187,32 @@ def visualize(df, x_col, y_col, cluster_col):
     plt.title('Clustering Visualization')
     plt.show()
 
+cache = {}
+bestK_cache = 2
+correlation_df_cache = None
 
 # Main() what the API does when it is called
 @app.route('/do_cluster', methods=['POST'])
 def do_cluster():
+    global cache
+    global bestK_cache
+    global correlation_df_cache
     print('called the backend')
     print('request.json', request.json)
     type = request.json.get('type')
     params = request.json.get('paramsAPI', {})
+
+    print('CACHE BEFORE:', cache)
+    if (correlation_df_cache is not None) and (type in cache) and (json.dumps(cache[type], sort_keys=True) == json.dumps(params, sort_keys=True)):
+        print('got into cache')
+        json_data = {}
+        json_data['cluster'] = correlation_df_cache.to_dict(orient='records')
+        json_data['bestK'] = bestK_cache
+        return jsonify(json_data)
+    cache = {}
+    cache[type] = params
+
+    print('CACHE AFTER:', cache)
 
     print(type, params)
 
@@ -246,6 +265,8 @@ def do_cluster():
     json_data = {}
     json_data['cluster'] = correlation_df.to_dict(orient='records')
     json_data['bestK'] = bestK
+    correlation_df_cache = correlation_df
+    bestK_cache = bestK
 
     print('Best K value:', json_data['bestK'])
     return jsonify(json_data)

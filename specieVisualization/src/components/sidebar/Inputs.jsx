@@ -2,11 +2,13 @@ import React, { useEffect, useState, useCallback } from 'react';
 import Slider from '@mui/material/Slider';
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
+import { MdKeyboardArrowDown, MdKeyboardArrowUp  } from "react-icons/md";
 
-const Inputs = ({ cluster, sendParams, bestK }) => {
+const Inputs = ({ cluster, sendParams, updateChart, bestK }) => {
   const [selectedJson, setSelectedJson] = useState({})
   const [params, setParams] = useState({})
   const [error, setError] = useState(null);
+  const [visible, setVisible] = useState(false);
 
   const kmeansJson = {
     "n_clusters": {
@@ -176,6 +178,10 @@ const Inputs = ({ cluster, sendParams, bestK }) => {
     sendParams(params);
   }, [cluster, params, sendParams]);
 
+  // const handleUpdateParams = useCallback((type) => {
+  //   updateChart(type);
+  // }, []);
+
   useEffect(() => {
     let json;
     switch(cluster) {
@@ -231,60 +237,74 @@ const Inputs = ({ cluster, sendParams, bestK }) => {
 
   return (
     <div className="inputs-group">
-      <h3>Hyperparameters</h3>
-      {Object.entries(selectedJson).map(([key, value]) => {
-        if (!value) {
-          console.error(`Invalid parameter: ${key}`);
-          return null;
-        }
-        return (
-          <div key={key} className='inputs-subgroup'>
-            <p>{key}</p>
-            {(value.type === 'int' || value.type === 'float') ? (
-              <Slider 
-                value={params[key] ?? value.default}
-                valueLabelDisplay="auto"
-                sx={{
-                  color: '#595959',  
-                  width: '60%', 
-                  margin: '5px',
-                  marginRight: '15px',
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignSelf: 'center'
-                }}
-                onChange={(event) => handleChange(event, key)}
-                marks
-                step={value.step}
-                min={value.min}
-                max={value.max}
-              />
-            ) : (
-              <Select
-                value={params[key] ?? value.default}
-                onChange={(event) => handleChange(event, key)}  
-                displayEmpty
-                inputProps={{ 'aria-label': 'Without label' }}
-                sx={{
-                  width: '60%', 
-                  height:'35px',
-                  margin: '5px',
-                  marginRight: '15px',
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignSelf: 'center',
-                  fontFamily:'Poppins'
-                }}
-              >
-                {value.options.map((op) =>
-                  <MenuItem key={op} value={op}>{op.toString()}</MenuItem> 
-                )}
-              </Select>
-            )}
+      <h2>Clustering config
+        <button className='visibility-btn' onClick={() => setVisible(!visible)}> 
+          {visible ? <MdKeyboardArrowDown /> : <MdKeyboardArrowUp  />}
+        </button>
+      </h2>
+      {visible &&
+        <div className="inputs-group">
+          <div className="button-group">
+            <button onClick={() => updateChart('kmeans')}>Kmeans</button>
+            <button onClick={() => updateChart('dbscan')}>DBSCAN</button>
+            <button onClick={() => updateChart('hierarquical')}>Hierarchical</button>
           </div>
-        );
-      })}
-      <button className='inputs-button' onClick={handleSendParams}>Apply</button>
+          <h3>Hyperparameters</h3>
+          {Object.entries(selectedJson).map(([key, value]) => {
+            if (!value) {
+              console.error(`Invalid parameter: ${key}`);
+              return null;
+            }
+            return (
+              <div key={key} className='inputs-subgroup'>
+                <p>{key}</p>
+                {(value.type === 'int' || value.type === 'float') ? (
+                  <Slider 
+                    value={params[key] ?? value.default}
+                    valueLabelDisplay="auto"
+                    sx={{
+                      color: '#595959',  
+                      width: '60%', 
+                      margin: '5px',
+                      marginRight: '15px',
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignSelf: 'center'
+                    }}
+                    onChange={(event) => handleChange(event, key)}
+                    marks
+                    step={value.step}
+                    min={value.min}
+                    max={value.max}
+                  />
+                ) : (
+                  <Select
+                    value={params[key] ?? value.default}
+                    onChange={(event) => handleChange(event, key)}  
+                    displayEmpty
+                    inputProps={{ 'aria-label': 'Without label' }}
+                    sx={{
+                      width: '60%', 
+                      height:'35px',
+                      margin: '5px',
+                      marginRight: '15px',
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignSelf: 'center',
+                      fontFamily:'Poppins'
+                    }}
+                  >
+                    {value.options.map((op) =>
+                      <MenuItem key={op} value={op}>{op.toString()}</MenuItem> 
+                    )}
+                  </Select>
+                )}
+              </div>
+            );
+          })}
+          <button className='inputs-button' onClick={handleSendParams}>Apply</button>
+        </div>
+      }
     </div>
   );
 };

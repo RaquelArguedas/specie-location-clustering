@@ -5,6 +5,7 @@ import { FaBaby } from "react-icons/fa";
 import Tooltip from '@mui/material/Tooltip';
 import IconButton from '@mui/material/IconButton';
 import Carrusel from "./Carrusel";
+import { ImSpinner8 } from "react-icons/im";
 
 const Info = ({ jsonInfo }) => {
   const [formattedInfo, setFormattedInfo] = useState([]);
@@ -79,6 +80,7 @@ const Info = ({ jsonInfo }) => {
   };
 
   useEffect(() => {
+    if (jsonInfo == null) return;
     const formatData = async () => {
       setLoading(true)
       const sex = await formatList(jsonInfo?.sex || [], false);
@@ -93,11 +95,14 @@ const Info = ({ jsonInfo }) => {
     };
 
     formatData();
+    // console.log(jsonInfo)
   }, [jsonInfo]);
 
   return (
     <div className="info-container">
-      {!loading & formattedInfo.length!=0 ? (
+      {(loading) ? (
+        <h3 className="text-xl font-bold"> <ImSpinner8 className='spinner' /> Loading details </h3>
+      ): (
         <div className="info-group">
           <div className="info-header">
             <h3 className="scientific-name">{scientificName}</h3>
@@ -118,7 +123,7 @@ const Info = ({ jsonInfo }) => {
             </div>
           </div>
         </div> 
-      ): (<h3 className="text-xl font-bold"> Waiting for info </h3>)}
+      )}
     </div>
   );
 };
