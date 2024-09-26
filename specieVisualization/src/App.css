@@ -33,6 +33,7 @@
 .main-group{
   display: flex;
   width: 100vw;
+  height: 90%;
 }
 
 .svg-group{
