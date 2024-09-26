@@ -178,10 +178,6 @@ const Inputs = ({ cluster, sendParams, updateChart, bestK }) => {
     sendParams(params);
   }, [cluster, params, sendParams]);
 
-  // const handleUpdateParams = useCallback((type) => {
-  //   updateChart(type);
-  // }, []);
-
   useEffect(() => {
     let json;
     switch(cluster) {
