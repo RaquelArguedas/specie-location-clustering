@@ -8,9 +8,6 @@ const Graphic = () => {
   const [actualCluster, setActualCluster] = useState("kmeans");
   const [bestK, setBestK] = useState(1);
   const svgRef = useRef(null);
-  const width = 1000;
-  const height = 1000;
-  const margin = { top: 20, right: 30, bottom: 30, left: 60 };
   const [jsonInfo, setJsonInfo] = useState(null);
   
   const colorScale = d3.scaleOrdinal()
@@ -50,13 +47,18 @@ const Graphic = () => {
 
     const svg = d3.select(svgRef.current);
 
+    const svgWidth = svgRef.current.clientWidth;
+    const svgHeight = svgRef.current.clientHeight;
+    let size = svgWidth>svgHeight ? svgHeight : svgWidth;
+    size = (size - Math.floor(size/11))
+
     const xScale = d3.scaleLinear()
       .domain([d3.min(data, d => d.UMAP1), d3.max(data, d => d.UMAP1)])
-      .range([margin.left, width - margin.right]);
+      .range([(svgWidth/2)-(size/2), (svgWidth/2)+(size/2)]);
 
     const yScale = d3.scaleLinear()
       .domain([d3.min(data, d => d.UMAP2), d3.max(data, d => d.UMAP2)])
-      .range([height - margin.bottom, margin.top]);
+      .range([(svgHeight/2)+(size/2), (svgHeight/2)-(size/2)]);
 
     svg.selectAll("circle").remove();
 
@@ -157,15 +159,7 @@ const Graphic = () => {
   useEffect(() => {
     if (!svgRef.current) return;
 
-    const svg = d3.select(svgRef.current)
-      .attr('width', width)
-      .attr('height', height);
-
-    svg.append("rect")
-      .attr("width", width)
-      .attr("height", height)
-      .style("fill", "none")
-      .style("pointer-events", "all");
+    const svg = d3.select(svgRef.current);
 
     updateChart("kmeans");
 
