@@ -117,7 +117,6 @@ const Info = ({ jsonInfo }) => {
               <div className="grid-item">
                 {(formattedInfo.sex).length != 0 && <p><b>Sex:</b> {formattedInfo.sex}</p>}
                 {(formattedInfo.lifeStage).length != 0 && <p><b>Life stage:</b> {formattedInfo.lifeStage}</p>}
-                {(formattedInfo.continent).length != 0 && <p><b>Continent:</b> {formattedInfo.continent}</p>}
                 {(formattedInfo.countryCode).length != 0 && <p><b>Country code:</b> {formattedInfo.countryCode}</p>}
               </div>
             </div>

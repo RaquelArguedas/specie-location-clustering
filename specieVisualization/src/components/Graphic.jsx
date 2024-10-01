@@ -18,8 +18,8 @@ const Graphic = () => {
     const occurrences = family[1];
   
     const sizeScale = d3.scaleLog()
-      .domain([100, 15000])
-      .range([5, 20]); 
+      .domain([50, 1000])
+      .range([5, 40]); 
   
     return sizeScale(occurrences);
   };
@@ -50,7 +50,7 @@ const Graphic = () => {
     const svgWidth = svgRef.current.clientWidth;
     const svgHeight = svgRef.current.clientHeight;
     let size = svgWidth>svgHeight ? svgHeight : svgWidth;
-    size = (size - Math.floor(size/11))
+    size = (size - Math.floor(size/6))
 
     const xScale = d3.scaleLinear()
       .domain([d3.min(data, d => d.UMAP1), d3.max(data, d => d.UMAP1)])

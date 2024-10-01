@@ -10,39 +10,31 @@ import umap
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import json
+from pygbif import occurrences
 
 app = Flask(__name__)
 CORS(app)
 
-# Goes throw downloaded datasets to make one. Returns that one last dataset.
-def get_datasets(folderName):
+# Gets the dataset from the module
+def get_datasets():
     df = pd.DataFrame()
-    multi_df = pd.DataFrame()
-    for name in os.listdir(f'C:/Users/raque/OneDrive - Estudiantes ITCR/Raquel/TEC/2024 II Semestre/CoCoProject/specie-location-clustering/backend/{folderName}'):
-        temp_df = pd.read_csv(f'{folderName}/{name}', delimiter='\t', low_memory=False)
-        if name.startswith('occurrence'):
-            df = pd.concat([df, temp_df], ignore_index=True)
-        else:
-            multi_df = pd.concat([multi_df, temp_df], ignore_index=True)
-    return df, multi_df
+    total_occurrences = 10200
+    batch_size = 300
+    for i in range(0, total_occurrences, batch_size):
+        res = occurrences.search(offset=i, hasCoordinate=True, continent="EUROPE", kingdomKey=1, classKey=212, mediatype='StillImage')
+        temp_df = pd.DataFrame(res['results'])
+        if temp_df.empty:
+            break
+        df = pd.concat([df, temp_df], ignore_index=True)
+    return df
 
 # Add multimedia link based on the gbifID
-def add_multi(correlation_df, df, multi_df):
-    multi_dict = multi_df.groupby('gbifID')['identifier'].apply(list).to_dict()
-    id_species_dict = df.groupby('scientificName')['gbifID'].apply(list).to_dict()
-    correlation_df['identifier'] = [[] for _ in range(len(correlation_df))]
-
-    for scientific_name, gbif_ids in id_species_dict.items():
-        if scientific_name in correlation_df['scientificName'].values:
-            mask = correlation_df['scientificName'] == scientific_name
-            
-            identifiers = []
-            for gbif_id in gbif_ids:
-                if gbif_id in multi_dict:
-                    identifiers.extend(multi_dict[gbif_id])
-            
-            correlation_df.loc[mask, 'identifier'] = correlation_df.loc[mask, 'identifier'].apply(lambda x: x + identifiers)
+def add_multi(correlation_df, df):
+    multi_dict = df.groupby('scientificName')['media'].apply(list).to_dict()
+    media_df = pd.DataFrame(list(multi_dict.items()), columns=['scientificName', 'identifier'])
+    correlation_df = correlation_df.merge(media_df, on='scientificName', how='left')
     return correlation_df
+
      
 # Add hexagon columns
 def add_hexagons(df):
@@ -217,17 +209,19 @@ def do_cluster():
     print(type, params)
 
     print('Starting...')
-    df, multi_df = get_datasets('biggerDatasets')
+    df = get_datasets()
     print('Datasets obtained')
 
     # reduce to desired columns
-    multi_df = multi_df[['gbifID', 'identifier']]
-    multi_df = multi_df.dropna(how='any',axis=0)
     df = df[['gbifID', 'sex', 'lifeStage', 'occurrenceStatus', 'occurrenceRemarks', 'eventDate', 
             'year', 'month', 'day', 'continent', 'countryCode', 'stateProvince', 'decimalLatitude', 
             'decimalLongitude', 'coordinateUncertaintyInMeters', 'identificationID', 'taxonID', 
             'scientificName', 'kingdom', 'phylum', 'class', 'order', 'family', 'genus', 'genericName', 
-            'specificEpithet', 'taxonRank']]
+            'specificEpithet', 'taxonRank', 'media']]
+    col = []
+    for index, item in df.iterrows():
+        col += [(item.to_dict())['media'][0]['identifier']]
+    df['media'] = col
     
     # not null values in those columns
     df = df[df['decimalLatitude'].notnull() & df['decimalLongitude'].notnull() & df['scientificName'].notnull()]
@@ -245,8 +239,8 @@ def do_cluster():
     for column in ['sex', 'lifeStage', 'continent', 'countryCode', 'kingdom', 'phylum', 'class', 'order', 'family', 'genus']:
         add_extra_info(correlation_df, df, column)
 
-    print('Adding multi column to table...')
-    add_multi(correlation_df, df, multi_df)
+    print('Adding media column to table...')
+    correlation_df = add_multi(correlation_df, df)
 
     print('Extra info added, doing clustering...') 
     selected_columns = correlation_df.select_dtypes(include=[np.number]).columns
@@ -255,7 +249,7 @@ def do_cluster():
     correlation_df['UMAP1'] = umap_embedding[:, 0]
     correlation_df['UMAP2'] = umap_embedding[:, 1]
     correlation_df['cluster'], bestK = clustering(type, umap_embedding, params) 
-    #visualize(correlation_df, 'UMAP1', 'UMAP2', 'cluster')
+    # visualize(correlation_df, 'UMAP1', 'UMAP2', 'cluster')
     
     print('Creating csv...')
     correlation_df.to_csv(os.path.join(os.getcwd(), 'correlation_table.csv'))
