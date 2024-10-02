@@ -18,8 +18,8 @@ const Graphic = () => {
     const occurrences = family[1];
   
     const sizeScale = d3.scaleLog()
-      .domain([50, 1000])
-      .range([5, 40]); 
+      .domain([100, 2000])
+      .range([20, 40]); 
   
     return sizeScale(occurrences);
   };
@@ -100,11 +100,25 @@ const Graphic = () => {
       })
       .on("mouseover", function(event, d) {
         const patternId = `pattern-${d.identifier[0].replace(/[^a-zA-Z0-9-_]/g, '')}`;
-        svg.select(`#${patternId} image`).attr("filter", "none");           
+        const circleRadius = 1.2 * d3.select(this).attr("r");
+        d3.select(this)
+          .attr("r", circleRadius) 
+          .raise();       
+        svg.select(`#${patternId} image`)
+          .attr("filter", "none")
+          .attr("width", circleRadius * 2) 
+          .attr("height", circleRadius * 2);    
       })
       .on("mouseout", function(event, d) {
         const patternId = `pattern-${d.identifier[0].replace(/[^a-zA-Z0-9-_]/g, '')}`;
-        svg.select(`#${patternId} image`).attr("filter", "grayscale(100%)"); 
+        const circleRadius = d3.select(this).attr("r") / 1.2;
+        d3.select(this)
+          .attr("r", circleRadius)
+          .lower();    
+        svg.select(`#${patternId} image`)
+          .attr("filter", "grayscale(100%)")
+          .attr("width", circleRadius * 2) 
+          .attr("height", circleRadius * 2); 
       });
 
 
