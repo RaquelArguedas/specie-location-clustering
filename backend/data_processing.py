@@ -40,8 +40,8 @@ def fetch_data_range(offset, batch_size=300, total_occurrences=10200):
     return pd.concat(df_list, ignore_index=True) if df_list else pd.DataFrame()
 
 # use total_occurrences=10200, num_threads=1, batch_size=300 for testing with changes on the query
-# def get_datasets(total_occurrences=142800, num_threads=14, batch_size=300):
-def get_datasets(total_occurrences=10200, num_threads=1, batch_size=300):
+# ACTUAL PARAMETERS: takes around 17min to get the dataset done, aprox.150 species 
+def get_datasets(total_occurrences=142800, num_threads=14, batch_size=300):
     df = pd.DataFrame()
     total_per_thread = total_occurrences // num_threads
     
