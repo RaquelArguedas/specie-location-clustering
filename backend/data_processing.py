@@ -11,22 +11,30 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import json
 from pygbif import occurrences
+import pandas as pd
+import time
 
 app = Flask(__name__)
 CORS(app)
+
 
 # Gets the dataset from the module
 def get_datasets():
     df = pd.DataFrame()
     total_occurrences = 10200
     batch_size = 300
-    for i in range(0, total_occurrences, batch_size):
-        res = occurrences.search(offset=i, hasCoordinate=True, continent="EUROPE", kingdomKey=1, classKey=212, mediatype='StillImage')
-        temp_df = pd.DataFrame(res['results'])
-        if temp_df.empty:
-            break
-        df = pd.concat([df, temp_df], ignore_index=True)
+    for loop in range(3):
+        print('_______________________________________')
+        start = loop * total_occurrences
+        for i in range(start, start + total_occurrences, batch_size):
+            print('i: ', i)
+            res = occurrences.search(offset=i, hasCoordinate=True, continent="EUROPE", kingdomKey=1, classKey=212, mediatype='StillImage')
+            temp_df = pd.DataFrame(res['results'])
+            if temp_df.empty:
+                break
+            df = pd.concat([df, temp_df], ignore_index=True)
     return df
+
 
 # Add multimedia link based on the gbifID
 def add_multi(correlation_df, df):
@@ -182,6 +190,7 @@ def visualize(df, x_col, y_col, cluster_col):
 cache = {}
 bestK_cache = 2
 correlation_df_cache = None
+df_cache = None
 
 # Main() what the API does when it is called
 @app.route('/do_cluster', methods=['POST'])
@@ -189,6 +198,7 @@ def do_cluster():
     global cache
     global bestK_cache
     global correlation_df_cache
+    global df_cache
     print('called the backend')
     print('request.json', request.json)
     type = request.json.get('type')
@@ -210,7 +220,20 @@ def do_cluster():
 
     print('Starting...')
     df = get_datasets()
+    # if df_cache is None:
+    #     if not os.path.exists('biodataset.csv'): 
+    #         print('getting datasets()')
+    #         df = get_datasets()
+    #         df.to_csv('biodataset.csv', index=False) 
+    #         df_cache = df
+    #     else: 
+    #         print('reading csv')
+    #         df_cache = df = pd.read_csv('biodataset.csv')
+    # else:
+    #     print('df in cache')
+    #     df = df_cache
     print('Datasets obtained')
+
 
     # reduce to desired columns
     df = df[['gbifID', 'sex', 'lifeStage', 'occurrenceStatus', 'occurrenceRemarks', 'eventDate', 
