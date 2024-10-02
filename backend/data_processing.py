@@ -12,28 +12,53 @@ from flask_cors import CORS
 import json
 from pygbif import occurrences
 import pandas as pd
+import concurrent.futures
 import time
+import ast
 
 app = Flask(__name__)
 CORS(app)
 
 
-# Gets the dataset from the module
-def get_datasets():
-    df = pd.DataFrame()
-    total_occurrences = 10200
-    batch_size = 300
-    for loop in range(3):
-        print('_______________________________________')
-        start = loop * total_occurrences
-        for i in range(start, start + total_occurrences, batch_size):
-            print('i: ', i)
+def fetch_data_range(offset, batch_size=300, total_occurrences=10200):
+    df_list = []
+    print(f'Fetching data starting from offset {offset}')
+    
+    for i in range(offset, offset + total_occurrences, batch_size):
+        print(f"{i} out of {offset + total_occurrences}")
+        try:
             res = occurrences.search(offset=i, hasCoordinate=True, continent="EUROPE", kingdomKey=1, classKey=212, mediatype='StillImage')
             temp_df = pd.DataFrame(res['results'])
             if temp_df.empty:
+                print(f"No more results at offset {i}, stopping.")
                 break
-            df = pd.concat([df, temp_df], ignore_index=True)
+            df_list.append(temp_df)
+        except Exception as e:
+            print(f"Error fetching data at offset {i}: {e}. Retrying...")
+            time.sleep(5)  # Esperar antes de reintentar
+    
+    return pd.concat(df_list, ignore_index=True) if df_list else pd.DataFrame()
+
+# use total_occurrences=10200, num_threads=1, batch_size=300 for testing with changes on the query
+# def get_datasets(total_occurrences=142800, num_threads=14, batch_size=300):
+def get_datasets(total_occurrences=10200, num_threads=1, batch_size=300):
+    df = pd.DataFrame()
+    total_per_thread = total_occurrences // num_threads
+    
+    with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as executor:
+        futures = [
+            executor.submit(fetch_data_range, thread_id * total_per_thread, batch_size, total_per_thread)
+            for thread_id in range(num_threads)
+        ]
+        
+        for future in concurrent.futures.as_completed(futures):
+            try:
+                df = pd.concat([df, future.result()], ignore_index=True)
+            except Exception as e:
+                print(f"Error in thread: {e}")
+    
     return df
+
 
 
 # Add multimedia link based on the gbifID
@@ -219,19 +244,13 @@ def do_cluster():
     print(type, params)
 
     print('Starting...')
-    df = get_datasets()
-    # if df_cache is None:
-    #     if not os.path.exists('biodataset.csv'): 
-    #         print('getting datasets()')
-    #         df = get_datasets()
-    #         df.to_csv('biodataset.csv', index=False) 
-    #         df_cache = df
-    #     else: 
-    #         print('reading csv')
-    #         df_cache = df = pd.read_csv('biodataset.csv')
-    # else:
-    #     print('df in cache')
-    #     df = df_cache
+    if df_cache is None:
+        if not os.path.exists('biodataset.csv'): 
+            df_cache = get_datasets()
+            df_cache.to_csv('biodataset.csv', index=False) 
+        else: 
+            df_cache = pd.read_csv('biodataset.csv')
+    df = df_cache
     print('Datasets obtained')
 
 
@@ -243,7 +262,11 @@ def do_cluster():
             'specificEpithet', 'taxonRank', 'media']]
     col = []
     for index, item in df.iterrows():
-        col += [(item.to_dict())['media'][0]['identifier']]
+        media_list = item.to_dict()['media']
+        if isinstance(media_list, str):
+            col += [ast.literal_eval(media_list)[0]['identifier']]
+        else:
+            col += [media_list[0]['identifier']]
     df['media'] = col
     
     # not null values in those columns
