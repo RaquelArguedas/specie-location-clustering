@@ -131,17 +131,20 @@ const Graphic = () => {
     
       const newXScale = transform.rescaleX(xScale);
       const newYScale = transform.rescaleY(yScale);
-    
+
       svg.selectAll("circle")
         .attr("cx", d => newXScale(d.UMAP1))
-        .attr("cy", d => newYScale(d.UMAP2))
+        .attr("cy", d => newYScale(d.UMAP2));
+
+      if (transform.k < 10) {
+        svg.selectAll("circle")
         .attr("r", d => getSize(d.family) * transform.k)
         .attr("fill", d => {
           const patternId = `pattern-${d.identifier[0].replace(/[^a-zA-Z0-9-_]/g, '')}`;
           const circleRadius = getSize(d.family) * transform.k;
     
           if (svg.select(`#${patternId}`).empty()) {
-            const pattern = svg.append("defs")
+            svg.append("defs")
               .append("pattern")
               .attr("id", patternId)
               .attr("patternUnits", "objectBoundingBox")
@@ -157,10 +160,9 @@ const Graphic = () => {
               .attr("width", circleRadius * 2)
               .attr("height", circleRadius * 2);
           }
-    
           return `url(#${patternId})`;
         });
-
+      }
     };
     
     svg.call(zoom);
