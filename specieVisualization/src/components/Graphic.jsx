@@ -12,14 +12,14 @@ const Graphic = () => {
   
   const colorScale = d3.scaleOrdinal()
     .domain([-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
-    .range(['lightcoral', 'lightseagreen', 'darkorchid', 'darkorange', 'lightskyblue', 'deeppink', 'lawngreen', 'aqua', 'papayawhip', 'palegreen', 'orchid']);
+    .range(['firebrick', 'mediumblue', 'lawngreen', 'darkorange', 'mediumvioletred', 'darkturquoise', 'lightcoral', 'gold', 'rebeccapurple', 'peru', 'darkslategray']);
 
   const getSize = (family) => {
     const occurrences = family[1];
   
     const sizeScale = d3.scaleLog()
       .domain([100, 2000])
-      .range([20, 40]); 
+      .range([8, 20]); 
   
     return sizeScale(occurrences);
   };
@@ -123,7 +123,7 @@ const Graphic = () => {
 
 
     const zoom = d3.zoom()
-      .scaleExtent([0.5, 20])
+      .scaleExtent([0.5, 40])
       .on('zoom', zoomed);
 
     function zoomed(event) {
