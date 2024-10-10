@@ -1,3 +1,4 @@
+import '../../styles/Carrusel.css';
 import React, { useState } from 'react';
 import { GoChevronLeft, GoChevronRight } from 'react-icons/go';
 

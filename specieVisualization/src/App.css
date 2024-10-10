@@ -1,3 +1,8 @@
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
 
 .app-container {
   display: flex;
@@ -9,31 +14,10 @@
   align-items: center;
 }
 
-.tooltip {
-  position: absolute;
-  text-align: center;
-  width: 100px;
-  height: 28px;
-  padding-top: 5px;
-  padding-bottom: 20px;
-  font-family: "Poppins", sans-serif;
-  font-size: 14px;
-  background: rgb(235, 235, 235);
-  border: 0px;
-  border-radius: 8px;
-  pointer-events: none;
-}
-
-.button-group {
-  text-align: center;
-  margin-top: 10px;
-  margin-bottom: 10px;
-}
-
 .main-group{
   display: flex;
   width: 100vw;
-  height: 90%;
+  height: 100%;
 }
 
 .svg-group{
@@ -71,256 +55,6 @@
   border-radius: 0px 0px 100px 100px;
 }
 
-.sidebar {
-  width: 500px;
-  height: 100vh;
-  background-color: #f4f4f4;
-  position: fixed;
-  top: 0;
-  right: 0;
-  transform: translateX(100%);
-  transition: transform 0.3s ease;
-}
-
-.sidebar-visible {
-  transform: translateX(0);  
-}
-
-.sidebar-hidden {
-  transform: translateX(100%);  
-}
-
-.sidebar-container{
-  display: flex; 
-  justify-content: end;
-  width: 1%;
-  z-index: 1000; 
-}
-
-.sidebar-btn {
-  display: flex; 
-  align-items: center; 
-  justify-content: center; 
-  background-color: rgb(237, 237, 237);
-  font-size: 30px;
-  border: none;
-  height: 50px;
-  margin-top: 10px;
-  border-radius: 5px 0px 0px 5px;
-  transition: transform 0.3s ease;
-  z-index: 1001;
-}
-
-.sidebar-btn:hover {
-  background-color: rgb(200, 200, 200); 
-  color: black;
-}
-
-.sidebar-btn-visible {
-  transform: translateX(-500px);  
-}
-
-.sidebar-btn-hidden {
-  transform: translateX(0);  
-}
-
-.inputs-group{
-  margin-bottom: 15px;
-  justify-content: start;
-  display: flex;
-  flex-direction: column;
-}
-
-.inputs-group h2{
-  display: flex;
-  align-items: center; 
-  justify-content: center;
-}
-
-.info-group{
-  padding: 5px;
-  width: 90%;
-  height: 100%;
-  max-height: 600px;
-  background-color: #fff;
-  border: 2px;
-  border-radius: 10px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 10px;
-}
-
-.inputs-subgroup{
-  display: flex;
-  width: 100%;
-}
-
-.inputs-subgroup p{
-  width: 40%;
-  margin-left: 15px;
-  margin-right: 15px;
-  display: flex;
-  justify-content: end;
-}
-
-.inputs-subgroup input{
-  width: 60%;
-  margin: 5px;
-  margin-right: 15px;
-  font-size: 15px;
-}
-
-.inputs-subgroup .MuiSlider-root .MuiSelect-root {
-  width: 60%;
-  margin: 5px;
-  margin-right: 15px;
-}
-
-.inputs-button {
-  background-color: white;
-  align-self: center;
-  width: 50%;
-  margin-top: 40px;
-}
-
-.visibility-btn {
-  background-color: #f4f4f4;
-  font-size: 30px;
-  border: none;
-  padding: 0px;
-  display: flex; 
-  align-items: center; 
-  justify-content: center; 
-}
-
-.visibility-btn:hover {
-  background-color: rgb(200, 200, 200); 
-  color: black;
-  border: 1px;
-  border-radius: 20px;
-}
-
-.info-container{
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-top: 10px;
-}
-
-.info-group{
-  padding: 5px;
-  width: 90%;
-  height: 100%;
-  background-color: #fff;
-  border: 2px;
-  border-radius: 10px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 10px;
-}
-
-.info-paragraph {
-  margin-top: 1rem; 
-}
-
-.info-header {
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.spinner {
-  animation-name: spin;
-  animation-duration: 1000ms;
-  animation-iteration-count: infinite;
-  animation-timing-function: linear; 
-}
-
-@keyframes spin {
-    from {
-        transform:rotate(0deg);
-    }
-    to {
-        transform:rotate(360deg);
-    }
-}
-
-.occurrences {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  color: rgb(70, 132, 219);
-}
-
-.occurrences-total {
-  font-size: 24px;
-  margin: 0px;
-}
-
-.occurrences-label {
-  font-size: 14px;
-  margin: 0px;
-}
-
-.gallery-container{
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.gallery-buttons{
-  display: flex;
-  flex-direction: row;
-}
-
-
-
-.grid-container {
-  display: grid;
-  grid-template-columns: repeat(1, 1fr); /* X in repeat(X, 1fr); means amount of columns */
-  gap: 1rem; 
-}
-
-.grid-container p{
-  margin: 0px;
-  margin-bottom: 10px;
-}
-
-.grid-container button{
-  padding: 2px;
-  margin: 0px !important; 
-  color: rgb(123, 123, 123);
-  background-color: white;
-  font-size: 17px;
-}
-
-.grid-container button:hover {
-  color: black;
-  background-color: white;
-}
-
-.gallery-container img {
-  width: 300px;
-  height: 200px;
-  margin: 5px;
-  object-fit: cover;
-  object-position: center;
-}
-
-.gallery-container button {
-  display: flex;             
-  justify-content: center;  
-  align-items: center;       
-  width: 40px;              
-  height: 40px;              
-  background-color: #f0f0f0; 
-  border: none;            
-  border-radius: 50%;   
-  cursor: pointer;       
-}
-
-
 h1 {
   margin-top: 30px;
   font-family: "DM Serif Text", serif;
@@ -340,19 +74,6 @@ h3 {
   font-family: "DM Serif Text", serif;
   font-weight: 500;
   text-align: center;
-}
-
-button{
-  background-color: white;
-  font-family: "Poppins", sans-serif;
-  font-size: 15px;
-  margin-left: 10px;
-}
-
-button:hover {
-  color: #fff;
-  background-color: rgb(171, 171, 171);
-  cursor:pointer;
 }
 
 p{

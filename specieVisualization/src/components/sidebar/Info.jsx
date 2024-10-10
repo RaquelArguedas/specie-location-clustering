@@ -1,7 +1,9 @@
+import '../../styles/Info.css';
 import React, { useState, useEffect } from 'react';
 import { IoMdFemale, IoMdMale } from "react-icons/io";
 import { FaEgg, FaPerson } from "react-icons/fa6";
 import { FaBaby } from "react-icons/fa";
+import { MdOutlineQuestionMark } from "react-icons/md";
 import Tooltip from '@mui/material/Tooltip';
 import IconButton from '@mui/material/IconButton';
 import Carrusel from "./Carrusel";
@@ -37,6 +39,7 @@ const Info = ({ jsonInfo }) => {
       case 'Adult':
       case 'Juvenile':
       case 'Egg':
+      case 'Unknown':
         const formatText = text[0].toUpperCase() + text.slice(1).toLowerCase();
         return (
           <Tooltip title={formatText} placement="top" arrow>
@@ -44,7 +47,9 @@ const Info = ({ jsonInfo }) => {
               {text === "FEMALE" ? <IoMdFemale /> : (
                 text === "MALE" ? <IoMdMale /> : (
                   text === "Adult" ? <FaPerson /> : (
-                    text === "Juvenile" ? <FaBaby /> : <FaEgg />
+                    text === "Juvenile" ? <FaBaby /> : (
+                      text === "Egg" ?  <FaEgg /> : <MdOutlineQuestionMark />
+                    )
                   )
                 ))}
             </IconButton>
@@ -105,7 +110,7 @@ const Info = ({ jsonInfo }) => {
       ): (
         <div className="info-group">
           <div className="info-header">
-            <h3 className="scientific-name">{scientificName}</h3>
+            <h3>{scientificName}</h3>
             <div className="occurrences">
               <p className="occurrences-total">{occurrencesTotal}</p>
               <p className="occurrences-label">occurrences</p>

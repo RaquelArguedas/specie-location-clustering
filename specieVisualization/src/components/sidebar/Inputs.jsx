@@ -1,3 +1,4 @@
+import '../../styles/Inputs.css';
 import React, { useEffect, useState, useCallback } from 'react';
 import Slider from '@mui/material/Slider';
 import MenuItem from '@mui/material/MenuItem';
@@ -239,7 +240,7 @@ const Inputs = ({ cluster, sendParams, updateChart, bestK }) => {
         </button>
       </h2>
       {visible &&
-        <div className="inputs-group">
+        <div className="inputs-group inputs-button">
           <div className="button-group">
             <button onClick={() => updateChart('kmeans')}>Kmeans</button>
             <button onClick={() => updateChart('dbscan')}>DBSCAN</button>
@@ -298,7 +299,7 @@ const Inputs = ({ cluster, sendParams, updateChart, bestK }) => {
               </div>
             );
           })}
-          <button className='inputs-button' onClick={handleSendParams}>Apply</button>
+          <button className='inputs-large-button' onClick={handleSendParams}>Apply</button>
         </div>
       }
     </div>

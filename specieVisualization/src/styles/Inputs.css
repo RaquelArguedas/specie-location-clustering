@@ -1,0 +1,81 @@
+.button-group {
+    text-align: center;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.inputs-group{
+    margin-bottom: 15px;
+    justify-content: start;
+    display: flex;
+    flex-direction: column;
+}
+
+.inputs-group h2{
+    display: flex;
+    align-items: center; 
+    justify-content: center;
+}
+
+.inputs-subgroup{
+    display: flex;
+    width: 100%;
+}
+
+.inputs-subgroup p{
+    width: 40%;
+    margin-left: 15px;
+    margin-right: 15px;
+    display: flex;
+    justify-content: end;
+}
+
+.inputs-subgroup input{
+    width: 60%;
+    margin: 5px;
+    margin-right: 15px;
+    font-size: 15px;
+}
+
+.inputs-subgroup .MuiSlider-root .MuiSelect-root {
+    width: 60%;
+    margin: 5px;
+    margin-right: 15px;
+}
+
+.inputs-large-button {
+    background-color: white;
+    align-self: center;
+    width: 50%;
+    margin-top: 40px;
+}
+
+.visibility-btn {
+    background-color: #f4f4f4;
+    font-size: 30px;
+    border: none;
+    padding: 0px;
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+}
+
+.visibility-btn:hover {
+    background-color: rgb(200, 200, 200); 
+    color: black;
+    border: 1px;
+    border-radius: 20px;
+}
+
+.inputs-button button{
+    background-color: white;
+    font-family: "Poppins", sans-serif;
+    font-size: 15px;
+    margin-left: 10px;
+}
+
+.inputs-button button:hover {
+    color: #fff;
+    background-color: rgb(171, 171, 171);
+    cursor:pointer;
+}

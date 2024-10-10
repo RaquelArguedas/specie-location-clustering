@@ -1,3 +1,4 @@
+import '../styles/Sidebar.css';
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import Inputs from './sidebar/Inputs';
 import Info from './sidebar/Info';

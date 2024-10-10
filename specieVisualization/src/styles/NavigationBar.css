@@ -1,0 +1,40 @@
+.navbar-container{
+    background-color: #dadada;
+    height: 70px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.navbar-title{
+    padding: 0px;
+    margin: 0px;
+    margin-left: 40px;
+    font-family: "DM Serif Text", serif;
+    font-size: 35px;
+    width: 50%;
+}
+
+.navbar-buttons{
+    margin-right: 40px;
+    display: flex;
+    justify-content: center;
+    width: 50%;
+}
+
+.navbar-buttons button{
+    margin: 0px 20px 0px 20px;
+    padding: 2px;
+    font-family: "DM Serif Text", serif;
+    font-size: 17px;
+    background-color: #dadada;
+    padding: 5px;
+    border: 0px;
+    border-radius: 15px;
+}
+
+.navbar-buttons button:hover {
+    background-color: #efefef;
+    cursor:pointer;
+}

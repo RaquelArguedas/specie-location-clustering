@@ -1,9 +1,10 @@
+import '../styles/Species.css';
 import React, { useEffect, useRef, useState, useCallback, act } from 'react';
 import PuffLoader from "react-spinners/PuffLoader";
-import Sidebar from "./Sidebar"
+import Sidebar from "../components/Sidebar"
 import * as d3 from 'd3';
 
-const Graphic = () => {
+const Species = () => {
   const [loading, setLoading] = useState(false);
   const [actualCluster, setActualCluster] = useState("kmeans");
   const [bestK, setBestK] = useState(1);
@@ -206,4 +207,4 @@ const Graphic = () => {
   );
 };
 
-export default Graphic;
+export default Species;
