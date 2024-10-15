@@ -1,24 +1,25 @@
 import './App.css';
+import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import NavigationBar from './components/NavigationBar';
+import NavigationBar from './components/Navigationbar';
 import Species from './pages/Species';
 import Regions from './pages/Regions';
-import Mixed from './pages/Mixed';
 
 function App() {
+  const [data, setData] = useState("");
+
   return (
     <>
-      <NavigationBar />
-      <div className="app-container">
       <BrowserRouter>
-        <Routes>
-          <Route path="/regions" element={<Regions />}/>
-          <Route path="/mixed" element={<Mixed />}/>
-          <Route path="/" element={<Species />}/>
-          <Route path="*" element={<Species />} />
-        </Routes>
+      { data != "" && <NavigationBar /> }
+        <div className="app-container">
+          <Routes>
+            { data != "" && <Route path="/regions" element={<Regions data={data} />} />}
+            <Route path="/" element={<Species setSharedData={setData} />} />
+            <Route path="*" element={<Species setSharedData={setData}/>} />
+          </Routes>
+        </div>
       </BrowserRouter>
-    </div>
     </>
   );
 }

@@ -4,7 +4,7 @@ import PuffLoader from "react-spinners/PuffLoader";
 import Sidebar from "../components/Sidebar"
 import * as d3 from 'd3';
 
-const Species = () => {
+const Species = ({ setSharedData }) => {
   const [loading, setLoading] = useState(false);
   const [actualCluster, setActualCluster] = useState("kmeans");
   const [bestK, setBestK] = useState(1);
@@ -20,7 +20,7 @@ const Species = () => {
   
     const sizeScale = d3.scaleLog()
       .domain([100, 2000])
-      .range([8, 20]); 
+      .range([8, 40]); 
   
     return sizeScale(occurrences);
   };
@@ -43,12 +43,13 @@ const Species = () => {
     });
     const response = await res.json();
     let data = response['cluster'];
+    setSharedData(response['cluster']);
     setBestK(response['bestK']);
     setLoading(false);
   
     const svg = d3.select(svgRef.current);
-    const svgWidth = svgRef.current.clientWidth;
-    const svgHeight = svgRef.current.clientHeight;
+    const svgWidth = svgRef.current ? svgRef.current.clientWidth : 1000;
+    const svgHeight = svgRef.current ? svgRef.current.clientHeight: 1000;
     let size = svgWidth > svgHeight ? svgHeight : svgWidth;
     size = size - Math.floor(size / 6);
   
@@ -137,6 +138,51 @@ const Species = () => {
   
         shadowGroup.lower();  
       });
+
+      const zoom = d3.zoom()
+      .scaleExtent([0.5, 40])
+      .on('zoom', zoomed);
+
+    function zoomed(event) {
+      const transform = event.transform;
+    
+      const newXScale = transform.rescaleX(xScale);
+      const newYScale = transform.rescaleY(yScale);
+
+      svg.selectAll("circle")
+        .attr("cx", d => newXScale(d.UMAP1))
+        .attr("cy", d => newYScale(d.UMAP2));
+
+      if (transform.k < 5) {
+        svg.selectAll("circle")
+        .attr("r", d => getSize(d.family) * transform.k)
+        .attr("fill", d => {
+          const patternId = `pattern-${d.identifier[0].replace(/[^a-zA-Z0-9-_]/g, '')}`;
+          const circleRadius = getSize(d.family) * transform.k;
+    
+          if (svg.select(`#${patternId}`).empty()) {
+            svg.append("defs")
+              .append("pattern")
+              .attr("id", patternId)
+              .attr("patternUnits", "objectBoundingBox")
+              .attr("width", 1)
+              .attr("height", 1)
+              .append("image")
+              .attr("xlink:href", d.identifier[0])
+              .attr("width", circleRadius * 2) 
+              .attr("height", circleRadius * 2)
+              .attr("preserveAspectRatio", "xMidYMid slice");
+          } else {
+            svg.select(`#${patternId} image`)
+              .attr("width", circleRadius * 2)
+              .attr("height", circleRadius * 2);
+          }
+          return `url(#${patternId})`;
+        });
+      }
+    };
+    
+    svg.call(zoom);
   
   }, []);
   

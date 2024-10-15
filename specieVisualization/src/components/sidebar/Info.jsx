@@ -94,7 +94,7 @@ const Info = ({ jsonInfo }) => {
       const countryCode = await formatList(jsonInfo?.countryCode || [], false);
       setFormattedInfo({ sex, lifeStage, continent, countryCode });
       setOccurrencesTotal(jsonInfo?.family[1])
-      setScientificName(jsonInfo?.scientificName)
+      setScientificName(jsonInfo?.genus[0])
       setIdentifier(jsonInfo?.identifier)
       setLoading(false)
     };
