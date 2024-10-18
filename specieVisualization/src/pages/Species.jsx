@@ -4,7 +4,7 @@ import PuffLoader from "react-spinners/PuffLoader";
 import Sidebar from "../components/Sidebar"
 import * as d3 from 'd3';
 
-const Species = ({ setSharedData }) => {
+const Species = ({ setSharedData, showSidebar, hexagonSelected, setSpecieSelected }) => {
   const [loading, setLoading] = useState(false);
   const [actualCluster, setActualCluster] = useState("kmeans");
   const [bestK, setBestK] = useState(1);
@@ -20,12 +20,21 @@ const Species = ({ setSharedData }) => {
   
     const sizeScale = d3.scaleLog()
       .domain([100, 2000])
-      .range([8, 40]); 
+      .range([8, 30]); 
   
     return sizeScale(occurrences);
   };
+
+  const formatData = (jsonResponse, hexagonId) => {
+    if (hexagonId === "") return jsonResponse;
+    console.log('hexagonId en format', hexagonId);
+    const filteredResponse = jsonResponse.filter(item => item[hexagonId] !== 0);
   
-  const updateChart = useCallback(async (type, paramsAPI) => {
+    return filteredResponse;
+  };
+  
+  
+  const updateChart = useCallback(async (type, paramsAPI, hexagonId) => {
     setBestK(1);
     setActualCluster(type);
   
@@ -42,7 +51,8 @@ const Species = ({ setSharedData }) => {
       body: body,
     });
     const response = await res.json();
-    let data = response['cluster'];
+    let data = formatData(response['cluster'], hexagonId);
+    // console.log('data', data)
     setSharedData(response['cluster']);
     setBestK(response['bestK']);
     setLoading(false);
@@ -112,6 +122,12 @@ const Species = ({ setSharedData }) => {
         shadowGroup.lower(); 
       })
       .on("mouseover", function(event, d) {
+        const hexArray = Object.entries(d)
+          .slice(0, 24) 
+          .filter(([key, value]) => value > 0) 
+          .map(([key]) => key); 
+
+        setSpecieSelected(hexArray);
         const patternId = `pattern-${d.identifier[0].replace(/[^a-zA-Z0-9-_]/g, '')}`;
         const circleRadius = 1.2 * d3.select(this).attr("r");
         d3.select(this)
@@ -126,6 +142,7 @@ const Species = ({ setSharedData }) => {
         shadowGroup.lower(); 
       })
       .on("mouseout", function(event, d) {
+        setSpecieSelected("")
         const patternId = `pattern-${d.identifier[0].replace(/[^a-zA-Z0-9-_]/g, '')}`;
         const circleRadius = d3.select(this).attr("r") / 1.2;
         d3.select(this)
@@ -192,16 +209,18 @@ const Species = ({ setSharedData }) => {
   }
 
   useEffect(() => {
+    console.log('hexagonSelected', hexagonSelected);
     if (!svgRef.current) return;
-
+    
     const svg = d3.select(svgRef.current);
 
-    updateChart("kmeans");
+    updateChart("kmeans", {}, hexagonSelected);
 
     return () => {
       svg.selectAll("*").remove();
     };
-  }, [updateChart]);
+  }, [updateChart, hexagonSelected]);
+
 
   const images = [
     "https://picsum.photos/id/1018/1000/600/",
@@ -220,7 +239,8 @@ const Species = ({ setSharedData }) => {
         }
         <svg ref={svgRef}></svg>
       </div>
-      <Sidebar cluster={actualCluster} sendParams={sendParams} updateChart={updateChart} bestK={bestK} jsonInfo={jsonInfo}/>
+      {showSidebar && 
+      <Sidebar cluster={actualCluster} sendParams={sendParams} updateChart={updateChart} bestK={bestK} jsonInfo={jsonInfo}/>}
     </div>
   );
 };

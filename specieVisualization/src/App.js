@@ -14,9 +14,9 @@ function App() {
       { data != "" && <NavigationBar /> }
         <div className="app-container">
           <Routes>
-            { data != "" && <Route path="/regions" element={<Regions data={data} />} />}
-            <Route path="/" element={<Species setSharedData={setData} />} />
-            <Route path="*" element={<Species setSharedData={setData}/>} />
+            { data != "" && <Route path="/regions" element={<Regions data={data} setSharedData={setData}/>} />}
+            <Route path="/" element={<Species setSharedData={setData} showSidebar = {true} />} />
+            <Route path="*" element={<Species setSharedData={setData} showSidebar = {true}/>} />
           </Routes>
         </div>
       </BrowserRouter>
