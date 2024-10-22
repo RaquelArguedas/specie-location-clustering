@@ -3,7 +3,7 @@ import * as maptilersdk from '@maptiler/sdk';
 import "@maptiler/sdk/dist/maptiler-sdk.css";
 import '../styles/Map.css';
 import * as d3 from 'd3';
-import { cellToBoundary } from "h3-js";
+import { cellToBoundary, cellToLatLng } from "h3-js";
 
 export default function Map({ data, setHexagonSelected, specieSelected }) {
   const mapContainer = useRef(null);
@@ -60,7 +60,6 @@ export default function Map({ data, setHexagonSelected, specieSelected }) {
   useEffect(() => {
     if (map.current) return; 
 
-    
     let hexagons = getHexagons();
     console.log('hexagons', hexagons);
 
@@ -127,6 +126,7 @@ export default function Map({ data, setHexagonSelected, specieSelected }) {
             Object.entries(hexagons).forEach(([hexId, hexData]) => {
               const originalColor = hexData.color;
               const currentFillLayerId = `hexagon-fill-layer-${Object.keys(hexagons).indexOf(hexId)}`;
+              console.log('currentFillLayerId', currentFillLayerId, 'originalColor', originalColor)
               map.current.setPaintProperty(currentFillLayerId, 'fill-color', originalColor);
             });
           } else {
@@ -147,27 +147,31 @@ export default function Map({ data, setHexagonSelected, specieSelected }) {
     });
   }, [center.lng, center.lat, zoom, data]);
 
-  useEffect(() => {
-    console.log('specieSelected from regions', specieSelected);
-    
-    if (specieSelected === '') {
-      Object.entries(hexagons).forEach(([hexagonId, hexagonData]) => {
-        const fillLayerId = `hexagon-fill-layer-${Object.keys(hexagons).indexOf(hexagonId)}`;
-        map.current.setPaintProperty(fillLayerId, 'fill-color', hexagonData.color); 
-      });
-      
-      return;
-    }
-  
-    specieSelected.forEach((hexagonId) => {
-      const hexagon = Object.values(hexagons).find(h => h.id === hexagonId);
-      
-      if (hexagon) {
-        const fillLayerId = `hexagon-fill-layer-${Object.keys(hexagons).indexOf(hexagonId)}`;
-        map.current.setPaintProperty(fillLayerId, 'fill-color', 'rgba(255, 0, 0, 0.5)');
+
+  useEffect(() => { 
+    console.log(specieSelected);
+    if (!map.current) return; 
+
+    const features = map.current.queryRenderedFeatures();
+    features.forEach((feature) => {
+      if (specieSelected === "") {
+        const markers = document.getElementsByClassName('hexagonMarker');
+        for (let i = 0; i < markers.length; i++) markers[i].remove();
+      } else {
+        if (feature.properties && feature.properties.hexagonId) {
+          const featureHexId = feature.properties.hexagonId
+          if (specieSelected.includes(featureHexId)){
+            const center = cellToLatLng(featureHexId)
+            new maptilersdk.Marker({color: "#878787", scale:"0.7"})
+              .setLngLat([center[1],center[0]])
+              .addTo(map.current)
+              .addClassName('hexagonMarker');
+          }
+        }
       }
     });
-  }, [specieSelected, hexagons]);
+  }, [specieSelected]);
+  
   
 
   return (

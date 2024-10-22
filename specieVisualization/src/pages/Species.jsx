@@ -27,7 +27,6 @@ const Species = ({ setSharedData, showSidebar, hexagonSelected, setSpecieSelecte
 
   const formatData = (jsonResponse, hexagonId) => {
     if (hexagonId === "") return jsonResponse;
-    console.log('hexagonId en format', hexagonId);
     const filteredResponse = jsonResponse.filter(item => item[hexagonId] !== 0);
   
     return filteredResponse;
@@ -126,8 +125,7 @@ const Species = ({ setSharedData, showSidebar, hexagonSelected, setSpecieSelecte
           .slice(0, 24) 
           .filter(([key, value]) => value > 0) 
           .map(([key]) => key); 
-
-        setSpecieSelected(hexArray);
+        if (setSpecieSelected != undefined) setSpecieSelected(hexArray);
         const patternId = `pattern-${d.identifier[0].replace(/[^a-zA-Z0-9-_]/g, '')}`;
         const circleRadius = 1.2 * d3.select(this).attr("r");
         d3.select(this)
@@ -142,7 +140,7 @@ const Species = ({ setSharedData, showSidebar, hexagonSelected, setSpecieSelecte
         shadowGroup.lower(); 
       })
       .on("mouseout", function(event, d) {
-        setSpecieSelected("")
+        if (setSpecieSelected != undefined) setSpecieSelected("")
         const patternId = `pattern-${d.identifier[0].replace(/[^a-zA-Z0-9-_]/g, '')}`;
         const circleRadius = d3.select(this).attr("r") / 1.2;
         d3.select(this)
@@ -209,7 +207,6 @@ const Species = ({ setSharedData, showSidebar, hexagonSelected, setSpecieSelecte
   }
 
   useEffect(() => {
-    console.log('hexagonSelected', hexagonSelected);
     if (!svgRef.current) return;
     
     const svg = d3.select(svgRef.current);
