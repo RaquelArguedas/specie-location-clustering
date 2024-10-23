@@ -2,6 +2,7 @@ import '../styles/Species.css';
 import React, { useEffect, useRef, useState, useCallback, act } from 'react';
 import PuffLoader from "react-spinners/PuffLoader";
 import Sidebar from "../components/Sidebar"
+import FloatingBox from "../components/FloatingBox"
 import * as d3 from 'd3';
 
 const Species = ({ setSharedData, showSidebar, hexagonSelected, setSpecieSelected }) => {
@@ -236,8 +237,11 @@ const Species = ({ setSharedData, showSidebar, hexagonSelected, setSpecieSelecte
         }
         <svg ref={svgRef}></svg>
       </div>
-      {showSidebar && 
-      <Sidebar cluster={actualCluster} sendParams={sendParams} updateChart={updateChart} bestK={bestK} jsonInfo={jsonInfo}/>}
+      {showSidebar ?
+        <Sidebar cluster={actualCluster} sendParams={sendParams} updateChart={updateChart} bestK={bestK} jsonInfo={jsonInfo}/> 
+      :
+        <FloatingBox jsonInfo={jsonInfo}/>
+      }
     </div>
   );
 };

@@ -8,7 +8,7 @@ import { cellToBoundary, cellToLatLng } from "h3-js";
 export default function Map({ data, setHexagonSelected, specieSelected }) {
   const mapContainer = useRef(null);
   const map = useRef(null);
-  const center = { lat: 50.08804, lng: 24.42076 }; // Praga
+  const center = { lat: 50.08804, lng: 24.42076 }; 
   const zoom = 3;
   let lastHexagon = ""; 
   maptilersdk.config.apiKey = 'ioRj9d7EC4vDuVYhP7MH';
@@ -147,26 +147,30 @@ export default function Map({ data, setHexagonSelected, specieSelected }) {
     });
   }, [center.lng, center.lat, zoom, data]);
 
+  const deleteMarkers = (features) =>{
+    features.forEach(() => {
+      const markers = document.getElementsByClassName('hexagonMarker');
+      for (let i = 0; i < markers.length; i++) markers[i].remove();
+    });
+  }
+
 
   useEffect(() => { 
-    console.log(specieSelected);
     if (!map.current) return; 
 
     const features = map.current.queryRenderedFeatures();
+    deleteMarkers(features);
+    if (specieSelected === "") return;
+    
     features.forEach((feature) => {
-      if (specieSelected === "") {
-        const markers = document.getElementsByClassName('hexagonMarker');
-        for (let i = 0; i < markers.length; i++) markers[i].remove();
-      } else {
-        if (feature.properties && feature.properties.hexagonId) {
-          const featureHexId = feature.properties.hexagonId
-          if (specieSelected.includes(featureHexId)){
-            const center = cellToLatLng(featureHexId)
-            new maptilersdk.Marker({color: "#878787", scale:"0.7"})
-              .setLngLat([center[1],center[0]])
-              .addTo(map.current)
-              .addClassName('hexagonMarker');
-          }
+      if (feature.properties && feature.properties.hexagonId) {
+        const featureHexId = feature.properties.hexagonId
+        if (specieSelected.includes(featureHexId)){
+          const center = cellToLatLng(featureHexId)
+          new maptilersdk.Marker({color: "#878787", scale:"0.7"})
+            .setLngLat([center[1],center[0]])
+            .addTo(map.current)
+            .addClassName('hexagonMarker');
         }
       }
     });
